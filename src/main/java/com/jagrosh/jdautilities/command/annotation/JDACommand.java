@@ -15,12 +15,14 @@
  */
 package com.jagrosh.jdautilities.command.annotation;
 
-import com.jagrosh.jdautilities.command.Command;
-import net.dv8tion.jda.core.Permission;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import java.lang.annotation.*;
-import java.util.ArrayList;
-import java.util.List;
+import com.jagrosh.jdautilities.command.Command;
+
+import net.dv8tion.jda.core.Permission;
 
 /**
  * An Annotation applicable to {@link java.lang.reflect.Method Method}s that will act as
