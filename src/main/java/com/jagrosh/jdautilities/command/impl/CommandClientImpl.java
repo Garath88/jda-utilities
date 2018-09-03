@@ -105,7 +105,7 @@ public class CommandClientImpl implements CommandClient, EventListener {
     private final String serverInvite;
     private final HashMap<String, Integer> commandIndex;
     private final ArrayList<Command> commands;
-    private final String success;
+    private String success;
     private final String warning;
     private final String error;
     private final String carbonKey;
@@ -196,8 +196,10 @@ public class CommandClientImpl implements CommandClient, EventListener {
             }
             event.replyInDm(builder.toString(), unused ->
             {
-                if (event.isFromType(ChannelType.TEXT))
+                if (event.isFromType(ChannelType.TEXT)) {
+                    event.reply(event.getMessage().getAuthor().getAsMention() + " Documentation has been sent to your DMs!");
                     event.reactSuccess();
+                }
             }, t -> event.replyWarning("Help cannot be sent because you are blocking Direct Messages."));
         } : helpConsumer;
 
@@ -349,6 +351,10 @@ public class CommandClientImpl implements CommandClient, EventListener {
     @Override
     public String getSuccess() {
         return success;
+    }
+
+    public void setSuccess(String success) {
+        this.success = success;
     }
 
     @Override

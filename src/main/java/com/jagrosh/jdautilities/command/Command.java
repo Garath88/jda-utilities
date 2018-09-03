@@ -222,12 +222,6 @@ public abstract class Command {
             return;
         }
 
-        // required role check
-        if (requiredRoles != null && !UserUtil.hasRequiredRole(event, requiredRoles) && !event.isOwner()) {
-            terminate(event, event.getClient().getError() + " You must have one of the following roles: `" + StringUtils.join(requiredRoles, ", ") + "` to use that!");
-            return;
-        }
-
         // availability check
         if (event.getChannelType() == ChannelType.TEXT) {
             // bot perms
@@ -273,6 +267,12 @@ public abstract class Command {
         } else if (guildOnly) {
             terminate(event, event.getClient().getError() + " This command cannot be used in Direct messages");
             return;
+        } else {
+            // required role check
+            if (requiredRoles != null && !UserUtil.hasRequiredRole(event, requiredRoles) && !event.isOwner()) {
+                terminate(event, event.getClient().getError() + " You must have one of the following roles: `" + StringUtils.join(requiredRoles, ", ") + "` to use that!");
+                return;
+            }
         }
 
         //cooldown check
