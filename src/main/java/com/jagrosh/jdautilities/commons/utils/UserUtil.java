@@ -20,6 +20,10 @@ public final class UserUtil {
     }
 
     private static boolean hasRole(CommandEvent event, String requiredRole) {
+        /**TODO**
+         * Create util and loop through guilds to find member
+         * instead of using Guild guild = event.getJDA().getGuilds().get(0);
+         */
         Guild guild = event.getJDA().getGuilds().get(0);
         Member member = guild.getMember(event.getAuthor());
         Optional<List<Role>> roles = Optional.ofNullable(member)
