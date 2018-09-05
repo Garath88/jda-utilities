@@ -39,7 +39,7 @@ import org.json.JSONTokener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.jagrosh.jdautilities.UserUtil;
+import com.jagrosh.jdautilities.commons.utils.UserUtil;
 import com.jagrosh.jdautilities.command.AnnotatedModuleCompiler;
 import com.jagrosh.jdautilities.command.Command;
 import com.jagrosh.jdautilities.command.Command.Category;
@@ -170,23 +170,19 @@ public class CommandClientImpl implements CommandClient, EventListener {
         this.helpConsumer = helpConsumer == null ? (event) -> {
             StringBuilder builder = new StringBuilder();
             Category category = null;
-            if (event.isFromType(ChannelType.TEXT)) {
-                builder.append("**")
-                    .append(event.getSelfUser().getName())
-                    .append("** commands:\n");
-                for (Command command : commands) {
-                    if (!command.isHidden() && (!command.isOwnerCommand() && UserUtil.hasRequiredRole(event, command.getRequiredRoles()) || event.isOwner())) {
-                        if (!Objects.equals(category, command.getCategory())) {
-                            category = command.getCategory();
-                            builder.append("\n\n  __").append(category == null ? "No Category" : category.getName()).append("__:\n");
-                        }
-                        builder.append("\n`").append(textPrefix).append(prefix == null ? " " : "").append(command.getName())
-                            .append(command.getArguments() == null ? "`" : " " + command.getArguments() + "`")
-                            .append(" - ").append(command.getHelp());
+            builder.append("**")
+                .append(event.getSelfUser().getName())
+                .append("** commands:\n");
+            for (Command command : commands) {
+                if (!command.isHidden() && (!command.isOwnerCommand() && UserUtil.hasRequiredRole(event, command.getRequiredRoles()) || event.isOwner())) {
+                    if (!Objects.equals(category, command.getCategory())) {
+                        category = command.getCategory();
+                        builder.append("\n\n  __").append(category == null ? "No Category" : category.getName()).append("__:\n");
                     }
+                    builder.append("\n`").append(textPrefix).append(prefix == null ? " " : "").append(command.getName())
+                        .append(command.getArguments() == null ? "`" : " " + command.getArguments() + "`")
+                        .append(" - ").append(command.getHelp());
                 }
-            } else {
-                event.reply("Please use the help command in a text channel.");
             }
             User owner = event.getJDA().getUserById(ownerId);
             if (owner != null) {
@@ -198,8 +194,8 @@ public class CommandClientImpl implements CommandClient, EventListener {
             {
                 if (event.isFromType(ChannelType.TEXT)) {
                     event.reply(event.getMessage().getAuthor().getAsMention() + " Documentation has been sent to your DMs!");
-                    event.reactSuccess();
                 }
+                event.reactSuccess();
             }, t -> event.replyWarning("Help cannot be sent because you are blocking Direct Messages."));
         } : helpConsumer;
 

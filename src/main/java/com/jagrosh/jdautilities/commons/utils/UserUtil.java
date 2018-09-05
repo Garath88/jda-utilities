@@ -1,10 +1,11 @@
-package com.jagrosh.jdautilities;
+package com.jagrosh.jdautilities.commons.utils;
 
 import java.util.List;
 import java.util.Optional;
 
 import com.jagrosh.jdautilities.command.CommandEvent;
 
+import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Role;
 
@@ -19,7 +20,9 @@ public final class UserUtil {
     }
 
     private static boolean hasRole(CommandEvent event, String requiredRole) {
-        Optional<List<Role>> roles = Optional.ofNullable(event.getMember())
+        Guild guild = event.getJDA().getGuilds().get(0);
+        Member member = guild.getMember(event.getAuthor());
+        Optional<List<Role>> roles = Optional.ofNullable(member)
             .map(Member::getRoles);
         return roles.map(roles1 -> roles1.stream()
             .anyMatch(role -> role.getName().equalsIgnoreCase(requiredRole)))

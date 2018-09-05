@@ -23,7 +23,7 @@ import java.util.function.Predicate;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.jagrosh.jdautilities.UserUtil;
+import com.jagrosh.jdautilities.commons.utils.UserUtil;
 
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.ChannelType;
