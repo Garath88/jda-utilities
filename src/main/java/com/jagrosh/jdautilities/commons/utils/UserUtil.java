@@ -1,36 +1,35 @@
 package com.jagrosh.jdautilities.commons.utils;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.Objects;
 
 import com.jagrosh.jdautilities.command.CommandEvent;
 
-import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.Role;
 
 public final class UserUtil {
+    private UserUtil() {
+    }
 
     public static boolean hasRequiredRole(CommandEvent event, List<String> requiredRoles) {
         if (requiredRoles != null) {
+            Member member = getMember(event);
             return requiredRoles.stream()
-                .anyMatch(role -> hasRole(event, role));
+                .anyMatch(role -> hasRole(member, role));
         }
         return true;
     }
 
-    private static boolean hasRole(CommandEvent event, String requiredRole) {
-        /**TODO**
-         * Create util and loop through guilds to find member
-         * instead of using Guild guild = event.getJDA().getGuilds().get(0);
-         */
-        Guild guild = event.getJDA().getGuilds().get(0);
-        Member member = guild.getMember(event.getAuthor());
-        Optional<List<Role>> roles = Optional.ofNullable(member)
-            .map(Member::getRoles);
-        return roles.map(roles1 -> roles1.stream()
-            .anyMatch(role -> role.getName().equalsIgnoreCase(requiredRole)))
-            .orElse(false);
+    private static Member getMember(CommandEvent event) {
+        return event.getJDA().getGuilds().stream()
+            .map(guild -> guild.getMember(event.getAuthor()))
+            .filter(Objects::nonNull)
+            .findFirst()
+            .orElseThrow(IllegalStateException::new);
+    }
 
+    private static boolean hasRole(Member member, String requiredRole) {
+        return member.getRoles().stream()
+            .anyMatch(role -> role.getName().equalsIgnoreCase(requiredRole));
     }
 }

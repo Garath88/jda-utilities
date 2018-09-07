@@ -39,7 +39,6 @@ import org.json.JSONTokener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.jagrosh.jdautilities.commons.utils.UserUtil;
 import com.jagrosh.jdautilities.command.AnnotatedModuleCompiler;
 import com.jagrosh.jdautilities.command.Command;
 import com.jagrosh.jdautilities.command.Command.Category;
@@ -50,6 +49,7 @@ import com.jagrosh.jdautilities.command.GuildSettingsManager;
 import com.jagrosh.jdautilities.command.GuildSettingsProvider;
 import com.jagrosh.jdautilities.commons.utils.FixedSizeCache;
 import com.jagrosh.jdautilities.commons.utils.SafeIdUtil;
+import com.jagrosh.jdautilities.commons.utils.UserUtil;
 
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.OnlineStatus;
@@ -449,7 +449,7 @@ public class CommandClientImpl implements CommandClient, EventListener {
         }
         textPrefix = prefix.equals(DEFAULT_PREFIX) ? "@" + event.getJDA().getSelfUser().getName() + " " : prefix;
         event.getJDA().getPresence().setPresence(status == null ? OnlineStatus.ONLINE : status,
-            game == null ? null : "default".equals(game.getName()) ? Game.playing("Type " + textPrefix + helpWord) : game);
+            game == null ? null : "default" .equals(game.getName()) ? Game.playing("Type " + textPrefix + helpWord) : game);
 
         // Start SettingsManager if necessary
         GuildSettingsManager<?> manager = getSettingsManager();
