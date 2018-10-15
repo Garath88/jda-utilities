@@ -51,6 +51,7 @@ import com.jagrosh.jdautilities.commons.utils.FixedSizeCache;
 import com.jagrosh.jdautilities.commons.utils.SafeIdUtil;
 import com.jagrosh.jdautilities.commons.utils.UserUtil;
 
+import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.OnlineStatus;
 import net.dv8tion.jda.core.Permission;
@@ -58,6 +59,7 @@ import net.dv8tion.jda.core.entities.ChannelType;
 import net.dv8tion.jda.core.entities.Game;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Message;
+import net.dv8tion.jda.core.entities.MessageEmbed;
 import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.entities.impl.JDAImpl;
 import net.dv8tion.jda.core.events.Event;
@@ -91,6 +93,12 @@ import okhttp3.Response;
  * @author John Grosh (jagrosh)
  */
 public class CommandClientImpl implements CommandClient, EventListener {
+    private static final String HELP_TEXT =
+        "The **+thread** command allows users the freedom to make whatever channel they want "
+            + "as long as the rules are being followed.\n"
+            + "Threads will expire if they haven't been active in 24 hours and not positioned in the top half of the current threads list.\n"
+            + "```fix\nNote: Sakura does not automatically respond to pings or key words outside of commands.```\n";
+
     private static final Logger LOG = LoggerFactory.getLogger(CommandClient.class);
     private static final int INDEX_LIMIT = 20;
     private static final String DEFAULT_PREFIX = "@mention";
@@ -126,18 +134,27 @@ public class CommandClientImpl implements CommandClient, EventListener {
     private int totalGuilds;
 
     public CommandClientImpl(String ownerId, String[] coOwnerIds, String prefix, String altprefix, Game game, OnlineStatus status, String serverInvite,
-        String success, String warning, String error, String carbonKey, String botsKey, String botsOrgKey, ArrayList<Command> commands,
+        String success, String warning, String error, String carbonKey, String botsKey, String botsOrgKey, List<Command> commands,
         boolean useHelp, Consumer<CommandEvent> helpConsumer, String helpWord, ScheduledExecutorService executor, int linkedCacheSize, AnnotatedModuleCompiler compiler,
         GuildSettingsManager manager) {
-        Checks.check(ownerId != null, "Owner ID was set null or not set! Please provide an User ID to register as the owner!");
+        Checks.check(ownerId != null,
+            "Owner ID was set null or not set! Please provide an User ID to register as the owner!");
 
-        if (!SafeIdUtil.checkId(ownerId))
-            LOG.warn(String.format("The provided Owner ID (%s) was found unsafe! Make sure ID is a non-negative long!", ownerId));
+        if (!SafeIdUtil.checkId(ownerId)) {
+            String warnMsg = String.format(
+                "The provided Owner ID (%s) was found unsafe! Make sure ID is a non-negative long!",
+                ownerId);
+            LOG.warn(warnMsg);
+        }
 
         if (coOwnerIds != null) {
             for (String coOwnerId : coOwnerIds) {
-                if (!SafeIdUtil.checkId(coOwnerId))
-                    LOG.warn(String.format("The provided CoOwner ID (%s) was found unsafe! Make sure ID is a non-negative long!", coOwnerId));
+                if (!SafeIdUtil.checkId(coOwnerId)) {
+                    String warnMsg = String.format(
+                        "The provided CoOwner ID (%s) was found unsafe! Make sure ID is a non-negative long!",
+                        coOwnerId);
+                    LOG.warn(warnMsg);
+                }
             }
         }
 
@@ -167,42 +184,52 @@ public class CommandClientImpl implements CommandClient, EventListener {
         this.executor = executor == null ? Executors.newSingleThreadScheduledExecutor() : executor;
         this.compiler = compiler;
         this.manager = manager;
-        this.helpConsumer = helpConsumer == null ? (event) -> {
-            StringBuilder builder = new StringBuilder();
-            Category category = null;
-            builder.append("**")
-                .append(event.getSelfUser().getName())
-                .append("** commands:\n");
-            for (Command command : commands) {
-                if (!command.isHidden() && (!command.isOwnerCommand() && UserUtil.hasRequiredRole(event, command.getRequiredRoles()) || event.isOwner())) {
-                    if (!Objects.equals(category, command.getCategory())) {
-                        category = command.getCategory();
-                        builder.append("\n\n  __").append(category == null ? "No Category" : category.getName()).append("__:\n");
-                    }
-                    builder.append("\n`").append(textPrefix).append(prefix == null ? " " : "").append(command.getName())
-                        .append(command.getArguments() == null ? "`" : " " + command.getArguments() + "`")
-                        .append(" - ").append(command.getHelp());
-                }
-            }
-            User owner = event.getJDA().getUserById(ownerId);
-            if (owner != null) {
-                builder.append("\n\nFor additional help, contact **").append(owner.getName()).append("**#").append(owner.getDiscriminator());
-                if (serverInvite != null)
-                    builder.append(" or join ").append(serverInvite);
-            }
-            event.replyInDm(builder.toString(), unused ->
+        this.helpConsumer = helpConsumer == null ? event ->
+            event.replyInDm(HELP_TEXT, getHelpInfoText(event), unused ->
             {
                 if (event.isFromType(ChannelType.TEXT)) {
                     event.reply(event.getMessage().getAuthor().getAsMention() + " Documentation has been sent to your DMs!");
                 }
                 event.reactSuccess();
-            }, t -> event.replyWarning("Help cannot be sent because you are blocking Direct Messages."));
-        } : helpConsumer;
+            }, t -> event.replyWarning("Help cannot be sent because you are blocking Direct Messages.")) : helpConsumer;
 
         // Load commands
         for (Command command : commands) {
             addCommand(command);
         }
+    }
+
+    private MessageEmbed getHelpInfoText(CommandEvent event) {
+        EmbedBuilder builder = new EmbedBuilder();
+        String title = String.format("**%s commands:**",
+            event.getSelfUser().getName());
+
+        User owner = event.getJDA().getUserById(ownerId);
+        String footer = String.format("%n%n%nFor additional help, contact %s#%s",
+            owner.getName(), owner.getDiscriminator());
+
+        return builder.setTitle(title)
+            .setImage("https://i.postimg.cc/mZNnDbtp/sakurahelp.png")
+            .setDescription(getCommandListText(event))
+            .setFooter(footer, event.getSelfUser().getAvatarUrl())
+            .build();
+    }
+
+    private String getCommandListText(CommandEvent event) {
+        Category category = null;
+        StringBuilder builder = new StringBuilder();
+        for (Command command : commands) {
+            if (!command.isHidden() && (!command.isOwnerCommand() && UserUtil.hasRequiredRole(event, command.getRequiredRoles()) || event.isOwner())) {
+                if (!Objects.equals(category, command.getCategory())) {
+                    category = command.getCategory();
+                    builder.append("\n\n  __").append(category == null ? "No Category" : category.getName()).append("__:\n");
+                }
+                builder.append("\n\n`").append(textPrefix).append(prefix == null ? " " : "").append(command.getName())
+                    .append(command.getArguments() == null ? "`" : " " + command.getArguments() + "`")
+                    .append(" - ").append(command.getHelp());
+            }
+        }
+        return builder.toString();
     }
 
     @Override
@@ -251,7 +278,7 @@ public class CommandClientImpl implements CommandClient, EventListener {
     @Override
     public void cleanCooldowns() {
         OffsetDateTime now = OffsetDateTime.now();
-        cooldowns.keySet().stream().filter((str) -> (cooldowns.get(str).isBefore(now)))
+        cooldowns.keySet().stream().filter(str -> (cooldowns.get(str).isBefore(now)))
             .collect(Collectors.toList()).forEach(cooldowns::remove);
     }
 
@@ -434,9 +461,9 @@ public class CommandClientImpl implements CommandClient, EventListener {
         else if (event instanceof ReadyEvent)
             onReady((ReadyEvent)event);
         else if (event instanceof ShutdownEvent) {
-            GuildSettingsManager<?> manager = getSettingsManager();
-            if (manager != null)
-                manager.shutdown();
+            GuildSettingsManager<?> guildSettingManager = getSettingsManager();
+            if (guildSettingManager != null)
+                guildSettingManager.shutdown();
             executor.shutdown();
         }
     }
@@ -449,12 +476,12 @@ public class CommandClientImpl implements CommandClient, EventListener {
         }
         textPrefix = prefix.equals(DEFAULT_PREFIX) ? "@" + event.getJDA().getSelfUser().getName() + " " : prefix;
         event.getJDA().getPresence().setPresence(status == null ? OnlineStatus.ONLINE : status,
-            game == null ? null : "default" .equals(game.getName()) ? Game.playing("Type " + textPrefix + helpWord) : game);
+            game == null ? null : "default".equals(game.getName()) ? Game.playing("Type " + textPrefix + helpWord) : game);
 
         // Start SettingsManager if necessary
-        GuildSettingsManager<?> manager = getSettingsManager();
-        if (manager != null)
-            manager.init();
+        GuildSettingsManager<?> guildSettingsManager = getSettingsManager();
+        if (guildSettingsManager != null)
+            guildSettingsManager.init();
 
         sendStats(event.getJDA());
     }
@@ -473,7 +500,7 @@ public class CommandClientImpl implements CommandClient, EventListener {
         if (prefix.equals(DEFAULT_PREFIX) || (altprefix != null && altprefix.equals(DEFAULT_PREFIX))) {
             if (rawContent.startsWith("<@" + event.getJDA().getSelfUser().getId() + ">") ||
                 rawContent.startsWith("<@!" + event.getJDA().getSelfUser().getId() + ">")) {
-                parts = splitOnPrefixLength(rawContent, rawContent.indexOf(">") + 1);
+                parts = splitOnPrefixLength(rawContent, rawContent.indexOf('>') + 1);
             }
         }
         // Check for prefix
@@ -486,9 +513,9 @@ public class CommandClientImpl implements CommandClient, EventListener {
         if (parts == null && settings != null) {
             Collection<String> prefixes = settings.getPrefixes();
             if (prefixes != null) {
-                for (String prefix : prefixes) {
-                    if (parts == null && rawContent.toLowerCase().startsWith(prefix.toLowerCase()))
-                        parts = splitOnPrefixLength(rawContent, prefix.length());
+                for (String guildPrefix : prefixes) {
+                    if (parts == null && rawContent.toLowerCase().startsWith(guildPrefix.toLowerCase()))
+                        parts = splitOnPrefixLength(rawContent, guildPrefix.length());
                 }
             }
         }
@@ -675,7 +702,7 @@ public class CommandClientImpl implements CommandClient, EventListener {
                     event.getChannel().deleteMessages(messages).queue(unused -> {
                     }, ignored -> {
                     });
-                else if (messages.size() > 0)
+                else if (!messages.isEmpty())
                     messages.forEach(m -> m.delete().queue(unused -> {
                     }, ignored -> {
                     }));
@@ -685,7 +712,7 @@ public class CommandClientImpl implements CommandClient, EventListener {
 
     private GuildSettingsProvider provideSettings(Guild guild) {
         Object settings = getSettingsFor(guild);
-        if (settings != null && settings instanceof GuildSettingsProvider)
+        if (settings instanceof GuildSettingsProvider)
             return (GuildSettingsProvider)settings;
         else
             return null;
