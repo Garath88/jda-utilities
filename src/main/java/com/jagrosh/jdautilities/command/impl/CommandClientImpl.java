@@ -96,7 +96,7 @@ public class CommandClientImpl implements CommandClient, EventListener {
     private static final String HELP_TEXT =
         "The **+thread** command allows users the freedom to make whatever channel they want "
             + "as long as the rules are being followed.\n"
-            + "Threads will expire if they haven't been active in 24 hours and not positioned in the top half of the current threads list.\n"
+            + "Threads will expire if they haven't been active in 48 hours and not positioned in the top half of the current threads list.\n"
             + "```fix\nNote: Sakura does not automatically respond to pings or key words outside of commands.```\n";
 
     private static final Logger LOG = LoggerFactory.getLogger(CommandClient.class);
