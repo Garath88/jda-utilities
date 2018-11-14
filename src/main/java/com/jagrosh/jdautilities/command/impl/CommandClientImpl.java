@@ -748,4 +748,9 @@ public class CommandClientImpl implements CommandClient, EventListener {
             }
         }
     }
+
+    @Override
+    public void displayHelp(CommandEvent event) {
+        this.helpConsumer.accept(event);
+    }
 }
