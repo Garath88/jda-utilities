@@ -15,22 +15,26 @@
  */
 package com.jagrosh.jdautilities.commons.waiter;
 
-import net.dv8tion.jda.core.events.Event;
-import net.dv8tion.jda.core.events.ShutdownEvent;
-import net.dv8tion.jda.core.hooks.EventListener;
-import net.dv8tion.jda.core.hooks.SubscribeEvent;
-import net.dv8tion.jda.core.utils.Checks;
-
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import net.dv8tion.jda.core.entities.User;
+import net.dv8tion.jda.core.events.Event;
+import net.dv8tion.jda.core.events.ShutdownEvent;
+import net.dv8tion.jda.core.hooks.EventListener;
+import net.dv8tion.jda.core.hooks.SubscribeEvent;
+import net.dv8tion.jda.core.utils.Checks;
 
 /**
  * <p>The EventWaiter is capable of handling specialized forms of
@@ -45,23 +49,22 @@ import java.util.stream.Stream;
  * <br>A more "shutdown adaptable" constructor allows the provision of a
  * {@code ScheduledExecutorService} and a choice of how exactly shutdown will be handled
  * (see {@link EventWaiter#EventWaiter(ScheduledExecutorService, boolean)} for more details).
- * 
+ *
  * <p>As a final note, if you intend to use the EventWaiter, it is highly recommended you <b>DO NOT</b>
  * create multiple EventWaiters! Doing this will cause unnecessary increases in memory usage.
- * 
+ *
  * @author John Grosh (jagrosh)
  */
-public class EventWaiter implements EventListener
-{
+public class EventWaiter implements EventListener {
     private final HashMap<Class<?>, Set<WaitingEvent>> waitingEvents;
     private final ScheduledExecutorService threadpool;
+    private final HashMap<User, ScheduledFuture<?>> userToTaskMapping;
     private final boolean shutdownAutomatically;
-    
+
     /**
      * Constructs an empty EventWaiter.
      */
-    public EventWaiter()
-    {
+    public EventWaiter() {
         this(Executors.newSingleThreadScheduledExecutor(), true);
     }
 
@@ -77,11 +80,11 @@ public class EventWaiter implements EventListener
      * <p>{@code shutdownAutomatically} is required to be manually specified by developers as a way of
      * verifying a contract that the developer will conform to the behavior of the newly generated EventWaiter:
      * <ul>
-     *     <li>If {@code true}, shutdown is handled when a {@link net.dv8tion.jda.core.events.ShutdownEvent ShutdownEvent}
-     *     is fired. This means that any external functions of the provided Executor is now impossible and any externally
-     *     queued tasks are lost if they have yet to be run.</li>
-     *     <li>If {@code false}, shutdown is now placed as a responsibility of the developer, and no attempt will be
-     *     made to shutdown the provided Executor.</li>
+     * <li>If {@code true}, shutdown is handled when a {@link net.dv8tion.jda.core.events.ShutdownEvent ShutdownEvent}
+     * is fired. This means that any external functions of the provided Executor is now impossible and any externally
+     * queued tasks are lost if they have yet to be run.</li>
+     * <li>If {@code false}, shutdown is now placed as a responsibility of the developer, and no attempt will be
+     * made to shutdown the provided Executor.</li>
      * </ul>
      * It's worth noting that this EventWaiter can serve as a delegate to invoke the threadpool's shutdown via
      * a call to {@link com.jagrosh.jdautilities.commons.waiter.EventWaiter#shutdown() EventWaiter#shutdown()}.
@@ -89,25 +92,20 @@ public class EventWaiter implements EventListener
      * otherwise invocation of {@code EventWaiter#shutdown()} will result in an
      * {@link java.lang.UnsupportedOperationException UnsupportedOperationException}.
      *
-     * @param  threadpool
-     *         The ScheduledExecutorService to use for this EventWaiter's threadpool.
-     * @param  shutdownAutomatically
-     *         Whether or not the {@code threadpool} will shutdown automatically when a
-     *         {@link net.dv8tion.jda.core.events.ShutdownEvent ShutdownEvent} is fired.
-     *
-     * @throws java.lang.IllegalArgumentException
-     *         If the threadpool provided is {@code null} or
-     *         {@link java.util.concurrent.ScheduledExecutorService#isShutdown() is shutdown}
-     *
-     * @see    com.jagrosh.jdautilities.commons.waiter.EventWaiter#shutdown() EventWaiter#shutdown()
+     * @param threadpool The ScheduledExecutorService to use for this EventWaiter's threadpool.
+     * @param shutdownAutomatically Whether or not the {@code threadpool} will shutdown automatically when a
+     * {@link net.dv8tion.jda.core.events.ShutdownEvent ShutdownEvent} is fired.
+     * @throws java.lang.IllegalArgumentException If the threadpool provided is {@code null} or
+     *                                            {@link java.util.concurrent.ScheduledExecutorService#isShutdown() is shutdown}
+     * @see com.jagrosh.jdautilities.commons.waiter.EventWaiter#shutdown() EventWaiter#shutdown()
      */
-    public EventWaiter(ScheduledExecutorService threadpool, boolean shutdownAutomatically)
-    {
+    public EventWaiter(ScheduledExecutorService threadpool, boolean shutdownAutomatically) {
         Checks.notNull(threadpool, "ScheduledExecutorService");
         Checks.check(!threadpool.isShutdown(), "Cannot construct EventWaiter with a closed ScheduledExecutorService!");
 
         this.waitingEvents = new HashMap<>();
         this.threadpool = threadpool;
+        userToTaskMapping = new HashMap<>();
 
         // "Why is there no default constructor?"
         //
@@ -129,112 +127,102 @@ public class EventWaiter implements EventListener
      *
      * @return {@code true} if the ScheduledExecutorService is shutdown, {@code false} otherwise.
      */
-    public boolean isShutdown()
-    {
+    public boolean isShutdown() {
         return threadpool.isShutdown();
     }
 
     /**
      * Waits an indefinite amount of time for an {@link net.dv8tion.jda.core.events.Event Event} that
      * returns {@code true} when tested with the provided {@link java.util.function.Predicate Predicate}.
-     * 
+     *
      * <p>When this occurs, the provided {@link java.util.function.Consumer Consumer} will accept and
      * execute using the same Event.
-     * 
-     * @param  <T>
-     *         The type of Event to wait for.
-     * @param  classType
-     *         The {@link java.lang.Class} of the Event to wait for. Never null.
-     * @param  condition
-     *         The Predicate to test when Events of the provided type are thrown. Never null.
-     * @param  action
-     *         The Consumer to perform an action when the condition Predicate returns {@code true}. Never null.
      *
-     * @throws IllegalArgumentException
-     *         One of two reasons:
-     *         <ul>
-     *             <li>1) Either the {@code classType}, {@code condition}, or {@code action} was {@code null}.</li>
-     *             <li>2) The internal threadpool is shut down, meaning that no more tasks can be submitted.</li>
-     *         </ul>
+     * @param <T> The type of Event to wait for.
+     * @param classType The {@link java.lang.Class} of the Event to wait for. Never null.
+     * @param condition The Predicate to test when Events of the provided type are thrown. Never null.
+     * @param action The Consumer to perform an action when the condition Predicate returns {@code true}. Never null.
+     * @throws IllegalArgumentException One of two reasons:
+     *                                  <ul>
+     *                                  <li>1) Either the {@code classType}, {@code condition}, or {@code action} was {@code null}.</li>
+     *                                  <li>2) The internal threadpool is shut down, meaning that no more tasks can be submitted.</li>
+     *                                  </ul>
      */
-    public <T extends Event> void waitForEvent(Class<T> classType, Predicate<T> condition, Consumer<T> action)
-    {
-        waitForEvent(classType, condition, action, -1, null, null);
+
+    public <T extends Event> void waitForEvent(Class<T> classType, Predicate<T> condition, Consumer<T> action,
+        long timeout, TimeUnit unit, Runnable timeoutAction, User user) {
+        scheduleWaitEvent(classType, condition, action, timeout, unit, timeoutAction, user);
     }
-    
+
+    public <T extends Event> void waitForEvent(Class<T> classType, Predicate<T> condition, Consumer<T> action,
+        long timeout, TimeUnit unit, Runnable timeoutAction) {
+        scheduleWaitEvent(classType, condition, action, timeout, unit, timeoutAction, null);
+    }
+
     /**
      * Waits a predetermined amount of time for an {@link net.dv8tion.jda.core.events.Event Event} that
      * returns {@code true} when tested with the provided {@link java.util.function.Predicate Predicate}.
-     * 
+     *
      * <p>Once started, there are two possible outcomes:
      * <ul>
-     *     <li>The correct Event occurs within the time allotted, and the provided
-     *     {@link java.util.function.Consumer Consumer} will accept and execute using the same Event.</li>
-     *     
-     *     <li>The time limit is elapsed and the provided {@link java.lang.Runnable} is executed.</li>
-     * </ul>
-     * 
-     * @param  <T>
-     *         The type of Event to wait for.
-     * @param  classType
-     *         The {@link java.lang.Class} of the Event to wait for. Never null.
-     * @param  condition
-     *         The Predicate to test when Events of the provided type are thrown. Never null.
-     * @param  action
-     *         The Consumer to perform an action when the condition Predicate returns {@code true}. Never null.
-     * @param  timeout
-     *         The maximum amount of time to wait for, or {@code -1} if there is no timeout.
-     * @param  unit
-     *         The {@link java.util.concurrent.TimeUnit TimeUnit} measurement of the timeout, or
-     *         {@code null} if there is no timeout.
-     * @param  timeoutAction
-     *         The Runnable to run if the time runs out before a correct Event is thrown, or
-     *         {@code null} if there is no action on timeout.
+     * <li>The correct Event occurs within the time allotted, and the provided
+     * {@link java.util.function.Consumer Consumer} will accept and execute using the same Event.</li>
      *
-     * @throws IllegalArgumentException
-     *         One of two reasons:
-     *         <ul>
-     *             <li>1) Either the {@code classType}, {@code condition}, or {@code action} was {@code null}.</li>
-     *             <li>2) The internal threadpool is shut down, meaning that no more tasks can be submitted.</li>
-     *         </ul>
+     * <li>The time limit is elapsed and the provided {@link java.lang.Runnable} is executed.</li>
+     * </ul>
+     *
+     * @param <T> The type of Event to wait for.
+     * @param classType The {@link java.lang.Class} of the Event to wait for. Never null.
+     * @param condition The Predicate to test when Events of the provided type are thrown. Never null.
+     * @param action The Consumer to perform an action when the condition Predicate returns {@code true}. Never null.
+     * @param timeout The maximum amount of time to wait for, or {@code -1} if there is no timeout.
+     * @param unit The {@link java.util.concurrent.TimeUnit TimeUnit} measurement of the timeout, or
+     * {@code null} if there is no timeout.
+     * @param timeoutAction The Runnable to run if the time runs out before a correct Event is thrown, or
+     * {@code null} if there is no action on timeout.
+     * @throws IllegalArgumentException One of two reasons:
+     *                                  <ul>
+     *                                  <li>1) Either the {@code classType}, {@code condition}, or {@code action} was {@code null}.</li>
+     *                                  <li>2) The internal threadpool is shut down, meaning that no more tasks can be submitted.</li>
+     *                                  </ul>
      */
-    public <T extends Event> void waitForEvent(Class<T> classType, Predicate<T> condition, Consumer<T> action,
-                                               long timeout, TimeUnit unit, Runnable timeoutAction)
-    {
+    public <T extends Event> void scheduleWaitEvent(Class<T> classType, Predicate<T> condition, Consumer<T> action,
+        long timeout, TimeUnit unit, Runnable timeoutAction, User user) {
         Checks.check(!isShutdown(), "Attempted to register a WaitingEvent while the EventWaiter's threadpool was already shut down!");
         Checks.notNull(classType, "The provided class type");
         Checks.notNull(condition, "The provided condition predicate");
         Checks.notNull(action, "The provided action consumer");
 
-        WaitingEvent we = new WaitingEvent<>(condition, action);
+        WaitingEvent we = new WaitingEvent<>(condition, action, user);
         Set<WaitingEvent> set = waitingEvents.computeIfAbsent(classType, c -> new HashSet<>());
         set.add(we);
 
-        if(timeout > 0 && unit != null)
-        {
-            threadpool.schedule(() ->
-            {
-                if(set.remove(we) && timeoutAction != null)
+        if (timeout > 0 && unit != null) {
+            ScheduledFuture<?> task = threadpool.schedule(() -> {
+                if (set.remove(we) && timeoutAction != null)
                     timeoutAction.run();
+                if (user != null) {
+                    userToTaskMapping.remove(user);
+                }
             }, timeout, unit);
+            if (user != null) {
+                userToTaskMapping.put(user, task);
+            }
         }
     }
-    
+
     @Override
     @SubscribeEvent
     @SuppressWarnings("unchecked")
-    public final void onEvent(Event event)
-    {
+    public final void onEvent(Event event) {
         Class c = event.getClass();
 
         // Runs at least once for the fired Event, at most
         // once for each superclass (excluding Object) because
         // Class#getSuperclass() returns null when the superclass
         // is primitive, void, or (in this case) Object.
-        while(c != null)
-        {
-            if(waitingEvents.containsKey(c))
-            {
+        while (c != null) {
+            if (waitingEvents.containsKey(c)) {
                 Set<WaitingEvent> set = waitingEvents.get(c);
                 WaitingEvent[] toRemove = set.toArray(new WaitingEvent[set.size()]);
 
@@ -243,8 +231,7 @@ public class EventWaiter implements EventListener
                 // remove them all from the set.
                 set.removeAll(Stream.of(toRemove).filter(i -> i.attempt(event)).collect(Collectors.toSet()));
             }
-            if(event instanceof ShutdownEvent && shutdownAutomatically)
-            {
+            if (event instanceof ShutdownEvent && shutdownAutomatically) {
                 threadpool.shutdown();
             }
             c = c.getSuperclass();
@@ -258,36 +245,52 @@ public class EventWaiter implements EventListener
      * <br>Calling this method on an EventWaiter that does shutdown automatically will result in
      * an {@link java.lang.UnsupportedOperationException UnsupportedOperationException} being thrown.
      *
-     * @throws UnsupportedOperationException
-     *         The EventWaiter is supposed to close automatically.
+     * @throws UnsupportedOperationException The EventWaiter is supposed to close automatically.
      */
-    public void shutdown()
-    {
-        if(shutdownAutomatically)
+    public void shutdown() {
+        if (shutdownAutomatically)
             throw new UnsupportedOperationException("Shutting down EventWaiters that are set to automatically close is unsupported!");
 
         threadpool.shutdown();
     }
-    
-    private class WaitingEvent<T extends Event>
-    {
+
+    private class WaitingEvent<T extends Event> {
         final Predicate<T> condition;
         final Consumer<T> action;
-        
-        WaitingEvent(Predicate<T> condition, Consumer<T> action)
-        {
+        final User user;
+
+        WaitingEvent(Predicate<T> condition, Consumer<T> action, User user) {
             this.condition = condition;
             this.action = action;
+            this.user = user;
         }
-        
-        boolean attempt(T event)
-        {
-            if(condition.test(event))
-            {
+
+        boolean attempt(T event) {
+            if (condition.test(event)) {
                 action.accept(event);
                 return true;
             }
             return false;
+        }
+
+        public User getUser() {
+            return user;
+        }
+    }
+
+    public void removeWaitingTask(User userThatLeft) {
+        if (userThatLeft != null) {
+            Optional<Entry<Class<?>, Set<WaitingEvent>>> waitingEventWithUsers = waitingEvents.entrySet().stream()
+                .filter(entry -> entry.getValue().stream().anyMatch(event -> event.getUser().getId().equals(userThatLeft.getId())))
+                .findFirst();
+            waitingEventWithUsers.ifPresent(classSetEntry -> waitingEvents.get(classSetEntry.getKey()).removeIf(
+                event -> event.getUser().getId().equals(userThatLeft.getId())));
+
+            ScheduledFuture<?> task = userToTaskMapping.get(userThatLeft);
+            if (task != null) {
+                task.cancel(false);
+                userToTaskMapping.remove(userThatLeft);
+            }
         }
     }
 }
