@@ -293,4 +293,8 @@ public class EventWaiter implements EventListener {
             }
         }
     }
+
+    public boolean isNotWaitingForUser(User user) {
+        return !userToTaskMapping.keySet().contains(user);
+    }
 }
