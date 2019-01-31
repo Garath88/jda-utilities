@@ -278,18 +278,18 @@ public class EventWaiter implements EventListener {
         }
     }
 
-    public void removeWaitingTask(User userThatLeft) {
-        if (userThatLeft != null) {
+    public void removeWaitingTask(User user) {
+        if (user != null) {
             Optional<Entry<Class<?>, Set<WaitingEvent>>> waitingEventWithUsers = waitingEvents.entrySet().stream()
-                .filter(entry -> entry.getValue().stream().anyMatch(event -> event.getUser().getId().equals(userThatLeft.getId())))
+                .filter(entry -> entry.getValue().stream().anyMatch(event -> event.getUser().getId().equals(user.getId())))
                 .findFirst();
             waitingEventWithUsers.ifPresent(classSetEntry -> waitingEvents.get(classSetEntry.getKey()).removeIf(
-                event -> event.getUser().getId().equals(userThatLeft.getId())));
+                event -> event.getUser().getId().equals(user.getId())));
 
-            ScheduledFuture<?> task = userToTaskMapping.get(userThatLeft);
+            ScheduledFuture<?> task = userToTaskMapping.get(user);
             if (task != null) {
                 task.cancel(false);
-                userToTaskMapping.remove(userThatLeft);
+                userToTaskMapping.remove(user);
             }
         }
     }
