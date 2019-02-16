@@ -93,12 +93,6 @@ import okhttp3.Response;
  * @author John Grosh (jagrosh)
  */
 public class CommandClientImpl implements CommandClient, EventListener {
-    private static final String HELP_TEXT =
-        "The **+thread** command allows users the freedom to make whatever channel they want "
-            + "as long as the rules are being followed.\n"
-            + "Threads will expire if they haven't been active in 48 hours and not positioned in the top half of the current threads list.\n"
-            + "```fix\nNote: Sakura does not automatically respond to pings or key words outside of commands.```\n";
-
     private static final Logger LOG = LoggerFactory.getLogger(CommandClient.class);
     private static final int INDEX_LIMIT = 20;
     private static final String DEFAULT_PREFIX = "@mention";
@@ -136,7 +130,7 @@ public class CommandClientImpl implements CommandClient, EventListener {
     public CommandClientImpl(String ownerId, String[] coOwnerIds, String prefix, String altprefix, Game game, OnlineStatus status, String serverInvite,
         String success, String warning, String error, String carbonKey, String botsKey, String botsOrgKey, List<Command> commands,
         boolean useHelp, Consumer<CommandEvent> helpConsumer, String helpWord, ScheduledExecutorService executor, int linkedCacheSize, AnnotatedModuleCompiler compiler,
-        GuildSettingsManager manager) {
+        GuildSettingsManager manager, HelpInfo helpInfo) {
         Checks.check(ownerId != null,
             "Owner ID was set null or not set! Please provide an User ID to register as the owner!");
 
@@ -185,7 +179,7 @@ public class CommandClientImpl implements CommandClient, EventListener {
         this.compiler = compiler;
         this.manager = manager;
         this.helpConsumer = helpConsumer == null ? event ->
-            event.replyInDm(HELP_TEXT, getHelpInfoText(event), unused ->
+            event.replyInDm(helpInfo.getHelpText(), getHelpInfoText(event, helpInfo.getImageUrl()), unused ->
             {
                 if (event.isFromType(ChannelType.TEXT)) {
                     event.reply(event.getMessage().getAuthor().getAsMention() + " Documentation has been sent to your DMs!");
@@ -199,7 +193,7 @@ public class CommandClientImpl implements CommandClient, EventListener {
         }
     }
 
-    private MessageEmbed getHelpInfoText(CommandEvent event) {
+    private MessageEmbed getHelpInfoText(CommandEvent event, String imageUrl) {
         EmbedBuilder builder = new EmbedBuilder();
         String title = String.format("**%s commands:**",
             event.getSelfUser().getName());
@@ -209,7 +203,7 @@ public class CommandClientImpl implements CommandClient, EventListener {
             owner.getName(), owner.getDiscriminator());
 
         return builder.setTitle(title)
-            .setImage("https://i.postimg.cc/mZNnDbtp/sakurahelp.png")
+            .setImage(imageUrl)
             .setDescription(getCommandListText(event))
             .setFooter(footer, event.getSelfUser().getAvatarUrl())
             .build();
@@ -567,7 +561,7 @@ public class CommandClientImpl implements CommandClient, EventListener {
     }
 
     private void sendStats(JDA jda) {
-        OkHttpClient client = ((JDAImpl)jda).getHttpClientBuilder().build();
+        OkHttpClient client = ((JDAImpl)jda).getHttpClient().newBuilder().build();
 
         if (carbonKey != null) {
             FormBody.Builder bodyBuilder = new FormBody.Builder()

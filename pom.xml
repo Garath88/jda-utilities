@@ -6,7 +6,7 @@
 
     <groupId>com.jagrosh</groupId>
     <artifactId>jda-utilities</artifactId>
-    <version>2.6-SNAPSHOT</version>
+    <version>2.7-SNAPSHOT</version>
     <build>
         <plugins>
             <plugin>
@@ -23,7 +23,7 @@
         <dependency>
             <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
-            <version>3.5.1_352-SNAPSHOT</version>
+            <version>3.8.2-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
