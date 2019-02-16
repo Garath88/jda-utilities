@@ -212,7 +212,6 @@ public class CommandClientImpl implements CommandClient, EventListener {
     private String getCommandListText(CommandEvent event) {
         Category category = null;
         StringBuilder builder = new StringBuilder();
-        appendHelpCommand(builder);
         for (Command command : commands) {
             if (!command.isHidden() && (!command.isOwnerCommand() && UserUtil.hasRequiredRole(event, command.getRequiredRoles()) || event.isOwner())) {
                 if (!Objects.equals(category, command.getCategory())) {
@@ -225,12 +224,6 @@ public class CommandClientImpl implements CommandClient, EventListener {
             }
         }
         return builder.toString();
-    }
-
-    private void appendHelpCommand(StringBuilder builder) {
-        builder.append("\n\n`").append(textPrefix).append(prefix == null ? " " : "").append("help")
-            .append("`")
-            .append(" - ").append("displays this help message.");
     }
 
     @Override
