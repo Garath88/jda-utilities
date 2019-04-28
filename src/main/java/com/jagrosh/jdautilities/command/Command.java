@@ -265,7 +265,7 @@ public abstract class Command {
                 }
             }
         } else if (guildOnly) {
-            terminate(event, event.getClient().getError() + " This command cannot be used in Direct messages");
+            terminate(event, event.getClient().getError() + " This command cannot be used in Direct Messages. \nPlease try the command in the **#botspam** channel!");
             return;
         } else {
             // required role check
