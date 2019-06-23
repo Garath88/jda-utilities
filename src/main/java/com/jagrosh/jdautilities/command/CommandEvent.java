@@ -204,6 +204,13 @@ public class CommandEvent {
         });
     }
 
+    public void reply(String message, MessageEmbed embed) {
+        event.getChannel().sendMessage(message, embed).queue(m -> {
+            if (event.isFromType(ChannelType.TEXT))
+                linkId(m);
+        });
+    }
+
     /**
      * Replies with a {@link net.dv8tion.jda.core.entities.MessageEmbed MessageEmbed}
      * and then queues a {@link java.util.function.Consumer}.
