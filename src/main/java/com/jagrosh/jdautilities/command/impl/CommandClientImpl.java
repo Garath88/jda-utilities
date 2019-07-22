@@ -50,6 +50,7 @@ import com.jagrosh.jdautilities.command.GuildSettingsProvider;
 import com.jagrosh.jdautilities.commons.utils.FixedSizeCache;
 import com.jagrosh.jdautilities.commons.utils.SafeIdUtil;
 import com.jagrosh.jdautilities.commons.utils.UserUtil;
+import com.jagrosh.jdautilities.commons.waiter.EventWaiter;
 
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.JDA;
@@ -126,11 +127,12 @@ public class CommandClientImpl implements CommandClient, EventListener {
     private String textPrefix;
     private CommandListener listener = null;
     private int totalGuilds;
+    private EventWaiter waiter;
 
     public CommandClientImpl(String ownerId, String[] coOwnerIds, String prefix, String altprefix, Game game, OnlineStatus status, String serverInvite,
         String success, String warning, String error, String carbonKey, String botsKey, String botsOrgKey, List<Command> commands,
         boolean useHelp, Consumer<CommandEvent> helpConsumer, String helpWord, ScheduledExecutorService executor, int linkedCacheSize, AnnotatedModuleCompiler compiler,
-        GuildSettingsManager manager, HelpInfo helpInfo) {
+        GuildSettingsManager manager, HelpInfo helpInfo, EventWaiter waiter) {
         Checks.check(ownerId != null,
             "Owner ID was set null or not set! Please provide an User ID to register as the owner!");
 
@@ -178,6 +180,7 @@ public class CommandClientImpl implements CommandClient, EventListener {
         this.executor = executor == null ? Executors.newSingleThreadScheduledExecutor() : executor;
         this.compiler = compiler;
         this.manager = manager;
+        this.waiter = waiter;
         this.helpConsumer = helpConsumer == null ? event ->
             event.replyInDm(helpInfo.getHelpText(), getHelpInfoText(event, helpInfo.getImageUrl()), unused ->
             {
@@ -239,6 +242,13 @@ public class CommandClientImpl implements CommandClient, EventListener {
     @Override
     public List<Command> getCommands() {
         return commands;
+    }
+
+    @Override
+    public List<String> getCommandArguments() {
+        return commands.stream()
+            .map(command -> prefix + command.getName().toLowerCase())
+            .collect(Collectors.toList());
     }
 
     @Override
@@ -539,6 +549,12 @@ public class CommandClientImpl implements CommandClient, EventListener {
 
                 if (command != null) {
                     CommandEvent cevent = new CommandEvent(event, args, this);
+
+                    if (!command.isOwnerCommand() && !waiter.isNotWaitingForUser(event.getAuthor())) {
+                        cevent.replyWarning(String.format("A command is already running and waiting for you to respond %s!",
+                            event.getAuthor().getAsMention()));
+                        return;
+                    }
 
                     if (listener != null)
                         listener.onCommand(cevent, command);

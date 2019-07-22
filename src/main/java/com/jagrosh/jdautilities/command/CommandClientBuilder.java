@@ -23,6 +23,7 @@ import java.util.function.Consumer;
 import com.jagrosh.jdautilities.command.impl.AnnotatedModuleCompilerImpl;
 import com.jagrosh.jdautilities.command.impl.CommandClientImpl;
 import com.jagrosh.jdautilities.command.impl.HelpInfo;
+import com.jagrosh.jdautilities.commons.waiter.EventWaiter;
 
 import net.dv8tion.jda.core.OnlineStatus;
 import net.dv8tion.jda.core.entities.Game;
@@ -59,6 +60,7 @@ public class CommandClientBuilder {
     private AnnotatedModuleCompiler compiler = new AnnotatedModuleCompilerImpl();
     private GuildSettingsManager manager = null;
     private HelpInfo helpInfo = new HelpInfo();
+    private EventWaiter waiter;
 
     /**
      * Builds a {@link com.jagrosh.jdautilities.command.impl.CommandClientImpl CommandClientImpl}
@@ -71,7 +73,7 @@ public class CommandClientBuilder {
     public CommandClient build() {
         CommandClient client = new CommandClientImpl(ownerId, coOwnerIds, prefix, altprefix, game, status, serverInvite,
             success, warning, error, carbonKey, botsKey, botsOrgKey, new ArrayList<>(commands), useHelp,
-            helpConsumer, helpWord, executor, linkedCacheSize, compiler, manager, helpInfo);
+            helpConsumer, helpWord, executor, linkedCacheSize, compiler, manager, helpInfo, waiter);
         if (listener != null)
             client.setListener(listener);
         return client;
@@ -407,5 +409,9 @@ public class CommandClientBuilder {
 
     public void setHelpInfo(HelpInfo helpInfo) {
         this.helpInfo = helpInfo;
+    }
+
+    public void setWaiter(EventWaiter waiter) {
+        this.waiter = waiter;
     }
 }

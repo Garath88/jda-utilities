@@ -15,11 +15,16 @@
  */
 package com.jagrosh.jdautilities.commons.waiter;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -58,7 +63,7 @@ import net.dv8tion.jda.core.utils.Checks;
 public class EventWaiter implements EventListener {
     private final HashMap<Class<?>, Set<WaitingEvent>> waitingEvents;
     private final ScheduledExecutorService threadpool;
-    private final HashMap<User, ScheduledFuture<?>> userToTaskMapping;
+    private final Map<User, List<WaitingTaskContainer>> userToWaitingTaskMapping;
     private final boolean shutdownAutomatically;
 
     /**
@@ -105,7 +110,7 @@ public class EventWaiter implements EventListener {
 
         this.waitingEvents = new HashMap<>();
         this.threadpool = threadpool;
-        userToTaskMapping = new HashMap<>();
+        userToWaitingTaskMapping = new ConcurrentHashMap<>();
 
         // "Why is there no default constructor?"
         //
@@ -199,14 +204,17 @@ public class EventWaiter implements EventListener {
 
         if (timeout > 0 && unit != null) {
             ScheduledFuture<?> task = threadpool.schedule(() -> {
-                if (set.remove(we) && timeoutAction != null)
-                    timeoutAction.run();
+                //Timed out
                 if (user != null) {
-                    userToTaskMapping.remove(user);
+                    userToWaitingTaskMapping.remove(user);
+                }
+                if (set.remove(we) && timeoutAction != null) {
+                    timeoutAction.run();
                 }
             }, timeout, unit);
             if (user != null) {
-                userToTaskMapping.put(user, task);
+                userToWaitingTaskMapping.computeIfAbsent(user, k ->
+                    new ArrayList<>()).add(new WaitingTaskContainer(we, task));
             }
         }
     }
@@ -216,7 +224,6 @@ public class EventWaiter implements EventListener {
     @SuppressWarnings("unchecked")
     public final void onEvent(Event event) {
         Class c = event.getClass();
-
         // Runs at least once for the fired Event, at most
         // once for each superclass (excluding Object) because
         // Class#getSuperclass() returns null when the superclass
@@ -229,9 +236,21 @@ public class EventWaiter implements EventListener {
                 // WaitingEvent#attempt invocations that return true have passed their condition tests
                 // and executed the action. We filter the ones that return false out of the toRemove and
                 // remove them all from the set.
-                set.removeAll(Stream.of(toRemove).filter(i -> i.attempt(event)).collect(Collectors.toSet()));
+                Set<WaitingEvent> toBeRemoved = Stream.of(toRemove).filter(i -> i.attempt(event)).collect(Collectors.toSet());
+                set.removeAll(toBeRemoved);
+
+                List<WaitingTaskContainer> toBeRemovedContainers = userToWaitingTaskMapping.values().stream()
+                    .flatMap(Collection::stream)
+                    .filter(container -> toBeRemoved.contains(container.getWaitingEvent()))
+                    .collect(Collectors.toList());
+                toBeRemovedContainers.forEach(value -> userToWaitingTaskMapping.forEach((key, t) ->
+                    userToWaitingTaskMapping.computeIfPresent(key, (k, l) -> l.remove(value) && l.isEmpty() ? null : l)));
             }
             if (event instanceof ShutdownEvent && shutdownAutomatically) {
+                userToWaitingTaskMapping.values()
+                    .forEach(containers -> containers
+                        .forEach(container -> container.getTask()
+                            .cancel(true)));
                 threadpool.shutdown();
             }
             c = c.getSuperclass();
@@ -254,7 +273,7 @@ public class EventWaiter implements EventListener {
         threadpool.shutdown();
     }
 
-    private class WaitingEvent<T extends Event> {
+    class WaitingEvent<T extends Event> {
         final Predicate<T> condition;
         final Consumer<T> action;
         final User user;
@@ -276,9 +295,10 @@ public class EventWaiter implements EventListener {
         public User getUser() {
             return user;
         }
+
     }
 
-    public void removeWaitingTask(User user) {
+    public void removeAllWaitingTasksForUser(User user) {
         if (user != null) {
             Optional<Entry<Class<?>, Set<WaitingEvent>>> waitingEventWithUsers = waitingEvents.entrySet().stream()
                 .filter(entry -> entry.getValue().stream().anyMatch(event -> event.getUser().getId().equals(user.getId())))
@@ -286,15 +306,17 @@ public class EventWaiter implements EventListener {
             waitingEventWithUsers.ifPresent(classSetEntry -> waitingEvents.get(classSetEntry.getKey()).removeIf(
                 event -> event.getUser().getId().equals(user.getId())));
 
-            ScheduledFuture<?> task = userToTaskMapping.get(user);
-            if (task != null) {
-                task.cancel(false);
-                userToTaskMapping.remove(user);
-            }
+            Optional.ofNullable(userToWaitingTaskMapping.get(user))
+                .ifPresent(containers -> {
+                    containers.stream()
+                        .map(WaitingTaskContainer::getTask)
+                        .forEach(task -> task.cancel(false));
+                    userToWaitingTaskMapping.remove(user);
+                });
         }
     }
 
     public boolean isNotWaitingForUser(User user) {
-        return !userToTaskMapping.keySet().contains(user);
+        return !userToWaitingTaskMapping.keySet().contains(user);
     }
 }

@@ -247,6 +247,8 @@ public interface CommandClient
      */
     List<Command> getCommands();
 
+    List<String> getCommandArguments();
+
     /**
      * Gets the time this {@link com.jagrosh.jdautilities.command.CommandClient CommandClient}
      * implementation was created.
