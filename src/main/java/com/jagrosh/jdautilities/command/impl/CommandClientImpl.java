@@ -246,9 +246,11 @@ public class CommandClientImpl implements CommandClient, EventListener {
 
     @Override
     public List<String> getCommandArguments() {
-        return commands.stream()
+        List<String> commandArguments = commands.stream()
             .map(command -> prefix + command.getName().toLowerCase())
             .collect(Collectors.toList());
+        commandArguments.add(prefix);
+        return commandArguments;
     }
 
     @Override
@@ -555,6 +557,15 @@ public class CommandClientImpl implements CommandClient, EventListener {
                             event.getAuthor().getAsMention()));
                         return;
                     }
+                    /*
+                    List<String> userRoles = new ArrayList<>();
+                    event.getJDA().getGuilds().stream()
+                        .findFirst().
+                        ifPresent(guild -> guild.getMember(event.getAuthor()).getRoles().stream().map(role -> role.getName().toLowerCase()).collect(Collectors.toCollection(() -> userRoles)));
+                    if (userRoles.contains("quiz") && (!name.equalsIgnoreCase("member") && !name.equalsIgnoreCase("help"))) {
+                        cevent.replyWarning("You can only use these cool commands when you first become a member!");
+                        return;
+                    }*/
 
                     if (listener != null)
                         listener.onCommand(cevent, command);
