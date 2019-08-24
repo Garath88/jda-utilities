@@ -552,10 +552,12 @@ public class CommandClientImpl implements CommandClient, EventListener {
                 if (command != null) {
                     CommandEvent cevent = new CommandEvent(event, args, this);
 
-                    if (!command.isOwnerCommand() && !waiter.isNotWaitingForUser(event.getAuthor())) {
-                        cevent.replyWarning(String.format("A command is already running and waiting for you to respond %s!",
-                            event.getAuthor().getAsMention()));
-                        return;
+                    if (waiter != null) {
+                        if (!command.isOwnerCommand() && !waiter.isNotWaitingForUser(event.getAuthor())) {
+                            cevent.replyWarning(String.format("A command is already running and waiting for you to respond %s!",
+                                event.getAuthor().getAsMention()));
+                            return;
+                        }
                     }
                     /*
                     List<String> userRoles = new ArrayList<>();
