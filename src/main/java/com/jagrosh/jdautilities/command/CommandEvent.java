@@ -18,6 +18,7 @@ package com.jagrosh.jdautilities.command;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import com.jagrosh.jdautilities.command.impl.CommandClientImpl;
@@ -145,8 +146,13 @@ public class CommandEvent {
      *
      * @param message A String message to reply with
      */
+
     public void reply(String message) {
         sendMessage(event.getChannel(), message);
+    }
+
+    public void reply(String message, int delayInMillis) {
+        sendMessage(event.getChannel(), message, delayInMillis);
     }
 
     /**
@@ -836,6 +842,17 @@ public class CommandEvent {
         List<String> messages = splitMessage(message);
         for (int i = 0; i < MAX_MESSAGES && i < messages.size(); i++) {
             chan.sendMessage(messages.get(i)).queue(m -> {
+                if (event.isFromType(ChannelType.TEXT))
+                    linkId(m);
+            });
+        }
+    }
+
+    private void sendMessage(MessageChannel chan, String message, int delayInMillis) {
+        chan.sendTyping().queue();
+        List<String> messages = splitMessage(message);
+        for (int i = 0; i < MAX_MESSAGES && i < messages.size(); i++) {
+            chan.sendMessage(messages.get(i)).queueAfter(delayInMillis, TimeUnit.MILLISECONDS, m -> {
                 if (event.isFromType(ChannelType.TEXT))
                     linkId(m);
             });
