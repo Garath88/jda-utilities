@@ -5,7 +5,7 @@ import java.util.Objects;
 
 import com.jagrosh.jdautilities.command.CommandEvent;
 
-import net.dv8tion.jda.core.entities.Member;
+import net.dv8tion.jda.api.entities.Member;
 
 public final class UserUtil {
     private UserUtil() {

@@ -15,27 +15,27 @@
  */
 package com.jagrosh.jdautilities.command;
 
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
 /**
  * An implementable "Listener" that can be added to a {@link com.jagrosh.jdautilities.command.CommandClient CommandClient}
  * and used to handle events relating to {@link com.jagrosh.jdautilities.command.Command Command}s.
- * 
+ *
  * @author John Grosh (jagrosh)
  */
-public interface CommandListener
-{
+public interface CommandListener {
     /**
      * Called when a {@link com.jagrosh.jdautilities.command.Command Command} is triggered
      * by a {@link com.jagrosh.jdautilities.command.CommandEvent CommandEvent}.
-     * 
+     *
      * @param  event
      *         The CommandEvent that triggered the Command
      * @param  command
      *         The Command that was triggered
      */
-    default void onCommand(CommandEvent event, Command command) {}
-    
+    default void onCommand(CommandEvent event, Command command) {
+    }
+
     /**
      * Called when a {@link com.jagrosh.jdautilities.command.Command Command} is triggered
      * by a {@link com.jagrosh.jdautilities.command.CommandEvent CommandEvent} after it's
@@ -44,38 +44,41 @@ public interface CommandListener
      * <p>Note that a <i>successfully</i> completed command is one that has not encountered
      * an error or exception. Calls that do face errors should be handled by
      * {@link CommandListener#onCommandException(CommandEvent, Command, Throwable) CommandListener#onCommandException}
-     * 
+     *
      * @param  event
      *         The CommandEvent that triggered the Command
      * @param  command
      *         The Command that was triggered
      */
-    default void onCompletedCommand(CommandEvent event, Command command) {}
-    
+    default void onCompletedCommand(CommandEvent event, Command command) {
+    }
+
     /**
      * Called when a {@link com.jagrosh.jdautilities.command.Command Command} is triggered
      * by a {@link com.jagrosh.jdautilities.command.CommandEvent CommandEvent} but is
      * terminated before completion.
-     * 
+     *
      * @param  event
      *         The CommandEvent that triggered the Command
      * @param  command
      *         The Command that was triggered
      */
-    default void onTerminatedCommand(CommandEvent event, Command command) {}
-    
+    default void onTerminatedCommand(CommandEvent event, Command command) {
+    }
+
     /**
-     * Called when a {@link net.dv8tion.jda.core.events.message.MessageReceivedEvent MessageReceivedEvent}
+     * Called when a {@link net.dv8tion.jda.api.events.message.MessageReceivedEvent MessageReceivedEvent}
      * is caught by the Client Listener's but doesn't correspond to a
      * {@link com.jagrosh.jdautilities.command.Command Command}.
-     * 
+     *
      * <p>In other words, this catches all <b>non-command</b> MessageReceivedEvents allowing
      * you to handle them without implementation of another listener.
-     * 
+     *
      * @param  event
      *         A MessageReceivedEvent that wasn't used to call a Command
      */
-    default void onNonCommandMessage(MessageReceivedEvent event) {}
+    default void onNonCommandMessage(MessageReceivedEvent event) {
+    }
 
     /**
      * Called when a {@link com.jagrosh.jdautilities.command.Command Command}
@@ -115,6 +118,6 @@ public interface CommandListener
      */
     default void onCommandException(CommandEvent event, Command command, Throwable throwable) {
         // Default rethrow as a runtime exception.
-        throw throwable instanceof RuntimeException? (RuntimeException)throwable : new RuntimeException(throwable);
+        throw throwable instanceof RuntimeException ? (RuntimeException)throwable : new RuntimeException(throwable);
     }
 }

@@ -55,14 +55,12 @@ import java.lang.annotation.Annotation;
  *            (IE: no-constructor).</li>
  * </ul>
  *
- * @see    ConvertedBy
- *
- * @since  2.0
  * @author Kaidan Gustave
+ * @see ConvertedBy
+ * @since 2.0
  */
 @FunctionalInterface
-public interface DocConverter<T extends Annotation>
-{
+public interface DocConverter<T extends Annotation> {
     /**
      * Returns a String processed from the contents of the provided
      * {@link java.lang.annotation.Annotation Annotation}.

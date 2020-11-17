@@ -25,18 +25,19 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 import com.jagrosh.jdautilities.commons.waiter.EventWaiter;
-import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.MessageBuilder;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.MessageChannel;
-import net.dv8tion.jda.core.entities.Role;
-import net.dv8tion.jda.core.entities.User;
-import net.dv8tion.jda.core.events.message.GenericMessageEvent;
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
-import net.dv8tion.jda.core.exceptions.PermissionException;
-import net.dv8tion.jda.core.requests.RestAction;
-import net.dv8tion.jda.core.utils.Checks;
+
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.MessageBuilder;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageChannel;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.message.GenericMessageEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
+import net.dv8tion.jda.api.exceptions.PermissionException;
+import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.internal.utils.Checks;
 
 /**
  * A {@link com.jagrosh.jdautilities.menu.Menu Menu} implementation, nearly identical
@@ -49,11 +50,10 @@ import net.dv8tion.jda.core.utils.Checks;
  *
  * @author John Grosh
  */
-public class Slideshow extends Menu
-{
-    private final BiFunction<Integer,Integer,Color> color;
-    private final BiFunction<Integer,Integer,String> text;
-    private final BiFunction<Integer,Integer,String> description;
+public class Slideshow extends Menu {
+    private final BiFunction<Integer, Integer, Color> color;
+    private final BiFunction<Integer, Integer, String> text;
+    private final BiFunction<Integer, Integer, String> description;
     private final boolean showPageNumbers;
     private final List<String> urls;
     private final Consumer<Message> finalAction;
@@ -69,14 +69,13 @@ public class Slideshow extends Menu
     public static final String STOP = "\u23F9";
     public static final String RIGHT = "\u25B6";
     public static final String BIG_RIGHT = "\u23E9";
-    
+
     Slideshow(EventWaiter waiter, Set<User> users, Set<Role> roles, long timeout, TimeUnit unit,
-              BiFunction<Integer,Integer,Color> color, BiFunction<Integer,Integer,String> text,
-              BiFunction<Integer,Integer,String> description, Consumer<Message> finalAction,
-              boolean showPageNumbers, List<String> items, boolean waitOnSinglePage,
-              int bulkSkipNumber, boolean wrapPageEnds, String leftText, String rightText,
-              boolean allowTextInput)
-    {
+        BiFunction<Integer, Integer, Color> color, BiFunction<Integer, Integer, String> text,
+        BiFunction<Integer, Integer, String> description, Consumer<Message> finalAction,
+        boolean showPageNumbers, List<String> items, boolean waitOnSinglePage,
+        int bulkSkipNumber, boolean wrapPageEnds, String leftText, String rightText,
+        boolean allowTextInput) {
         super(waiter, users, roles, timeout, unit);
         this.color = color;
         this.text = text;
@@ -93,153 +92,135 @@ public class Slideshow extends Menu
     }
 
     /**
-     * Begins pagination on page 1 as a new {@link net.dv8tion.jda.core.entities.Message Message} 
-     * in the provided {@link net.dv8tion.jda.core.entities.MessageChannel MessageChannel}.
-     * 
+     * Begins pagination on page 1 as a new {@link net.dv8tion.jda.api.entities.Message Message}
+     * in the provided {@link net.dv8tion.jda.api.entities.MessageChannel MessageChannel}.
+     *
      * @param  channel
      *         The MessageChannel to send the new Message to
      */
     @Override
-    public void display(MessageChannel channel)
-    {
+    public void display(MessageChannel channel) {
         paginate(channel, 1);
     }
 
     /**
      * Begins pagination on page 1 displaying this by editing the provided
-     * {@link net.dv8tion.jda.core.entities.Message Message}.
-     * 
+     * {@link net.dv8tion.jda.api.entities.Message Message}.
+     *
      * @param  message
      *         The Message to display the Menu in
      */
     @Override
-    public void display(Message message)
-    {
+    public void display(Message message) {
         paginate(message, 1);
     }
-    
+
     /**
-     * Begins pagination as a new {@link net.dv8tion.jda.core.entities.Message Message} 
-     * in the provided {@link net.dv8tion.jda.core.entities.MessageChannel MessageChannel}, starting
+     * Begins pagination as a new {@link net.dv8tion.jda.api.entities.Message Message}
+     * in the provided {@link net.dv8tion.jda.api.entities.MessageChannel MessageChannel}, starting
      * on whatever page number is provided.
-     * 
+     *
      * @param  channel
      *         The MessageChannel to send the new Message to
      * @param  pageNum
      *         The page number to begin on
      */
-    public void paginate(MessageChannel channel, int pageNum)
-    {
-        if(pageNum<1)
+    public void paginate(MessageChannel channel, int pageNum) {
+        if (pageNum < 1)
             pageNum = 1;
-        else if (pageNum>urls.size())
+        else if (pageNum > urls.size())
             pageNum = urls.size();
         Message msg = renderPage(pageNum);
         initialize(channel.sendMessage(msg), pageNum);
     }
-    
+
     /**
      * Begins pagination displaying this by editing the provided
-     * {@link net.dv8tion.jda.core.entities.Message Message}, starting on whatever
+     * {@link net.dv8tion.jda.api.entities.Message Message}, starting on whatever
      * page number is provided.
-     * 
+     *
      * @param  message
      *         The MessageChannel to send the new Message to
      * @param  pageNum
      *         The page number to begin on
      */
-    public void paginate(Message message, int pageNum)
-    {
-        if(pageNum<1)
+    public void paginate(Message message, int pageNum) {
+        if (pageNum < 1)
             pageNum = 1;
-        else if (pageNum>urls.size())
+        else if (pageNum > urls.size())
             pageNum = urls.size();
         Message msg = renderPage(pageNum);
         initialize(message.editMessage(msg), pageNum);
     }
-    
-    private void initialize(RestAction<Message> action, int pageNum)
-    {
-        action.queue(m->{
-            if(urls.size()>1)
-            {
-                if(bulkSkipNumber > 1)
+
+    private void initialize(RestAction<Message> action, int pageNum) {
+        action.queue(m -> {
+            if (urls.size() > 1) {
+                if (bulkSkipNumber > 1)
                     m.addReaction(BIG_LEFT).queue();
                 m.addReaction(LEFT).queue();
                 m.addReaction(STOP).queue();
-                if(bulkSkipNumber > 1)
+                if (bulkSkipNumber > 1)
                     m.addReaction(RIGHT).queue();
-                m.addReaction(bulkSkipNumber > 1? BIG_RIGHT : RIGHT)
-                 .queue(v -> pagination(m, pageNum), t -> pagination(m, pageNum));
-            }
-            else if(waitOnSinglePage)
-            {
+                m.addReaction(bulkSkipNumber > 1 ? BIG_RIGHT : RIGHT)
+                    .queue(v -> pagination(m, pageNum), t -> pagination(m, pageNum));
+            } else if (waitOnSinglePage) {
                 m.addReaction(STOP).queue(v -> pagination(m, pageNum), t -> pagination(m, pageNum));
-            }
-            else
-            {
+            } else {
                 finalAction.accept(m);
             }
         });
     }
-    
-    private void pagination(Message message, int pageNum)
-    {
-        if(allowTextInput || (leftText != null && rightText != null))
+
+    private void pagination(Message message, int pageNum) {
+        if (allowTextInput || (leftText != null && rightText != null))
             paginationWithTextInput(message, pageNum);
         else
             paginationWithoutTextInput(message, pageNum);
     }
 
-    private void paginationWithTextInput(Message message, int pageNum)
-    {
+    private void paginationWithTextInput(Message message, int pageNum) {
         waiter.waitForEvent(GenericMessageEvent.class, event -> {
-            if(event instanceof MessageReactionAddEvent)
-                return checkReaction((MessageReactionAddEvent) event, message.getIdLong());
-            else if(event instanceof MessageReceivedEvent)
-            {
-                MessageReceivedEvent mre = (MessageReceivedEvent) event;
+            if (event instanceof MessageReactionAddEvent)
+                return checkReaction((MessageReactionAddEvent)event, message.getIdLong());
+            else if (event instanceof MessageReceivedEvent) {
+                MessageReceivedEvent mre = (MessageReceivedEvent)event;
                 // Wrong channel
-                if(!mre.getChannel().equals(message.getChannel()))
+                if (!mre.getChannel().equals(message.getChannel()))
                     return false;
                 String rawContent = mre.getMessage().getContentRaw().trim();
-                if(leftText != null && rightText != null)
-                {
-                    if(rawContent.equalsIgnoreCase(leftText) || rawContent.equalsIgnoreCase(rightText))
+                if (leftText != null && rightText != null) {
+                    if (rawContent.equalsIgnoreCase(leftText) || rawContent.equalsIgnoreCase(rightText))
                         return isValidUser(mre.getAuthor(), mre.getGuild());
                 }
 
-                if(allowTextInput)
-                {
+                if (allowTextInput) {
                     try {
                         int i = Integer.parseInt(rawContent);
                         // Minimum 1, Maximum the number of pages, never the current page number
-                        if(1 <= i && i <= urls.size() && i != pageNum)
+                        if (1 <= i && i <= urls.size() && i != pageNum)
                             return isValidUser(mre.getAuthor(), mre.getGuild());
-                    } catch(NumberFormatException ignored) {}
+                    } catch (NumberFormatException ignored) {
+                    }
                 }
             }
             // Default return false
             return false;
         }, event -> {
-            if(event instanceof MessageReactionAddEvent)
-            {
-                handleMessageReactionAddAction((MessageReactionAddEvent) event, message, pageNum);
-            }
-            else
-            {
-                MessageReceivedEvent mre = ((MessageReceivedEvent) event);
+            if (event instanceof MessageReactionAddEvent) {
+                handleMessageReactionAddAction((MessageReactionAddEvent)event, message, pageNum);
+            } else {
+                MessageReceivedEvent mre = ((MessageReceivedEvent)event);
                 String rawContent = mre.getMessage().getContentRaw().trim();
 
                 int pages = urls.size();
                 final int targetPage;
 
-                if(leftText != null && rawContent.equalsIgnoreCase(leftText) && (1 < pageNum || wrapPageEnds))
-                    targetPage = pageNum - 1 < 1 && wrapPageEnds? pages : pageNum - 1;
-                else if(rightText != null && rawContent.equalsIgnoreCase(rightText) && (pageNum < pages || wrapPageEnds))
-                    targetPage = pageNum + 1 > pages && wrapPageEnds? 1 : pageNum + 1;
-                else
-                {
+                if (leftText != null && rawContent.equalsIgnoreCase(leftText) && (1 < pageNum || wrapPageEnds))
+                    targetPage = pageNum - 1 < 1 && wrapPageEnds ? pages : pageNum - 1;
+                else if (rightText != null && rawContent.equalsIgnoreCase(rightText) && (pageNum < pages || wrapPageEnds))
+                    targetPage = pageNum + 1 > pages && wrapPageEnds ? 1 : pageNum + 1;
+                else {
                     // This will run without fail because we know the above conditions don't apply but our logic
                     // when checking the event in the block above this action block has guaranteed this is the only
                     // option at this point
@@ -247,13 +228,14 @@ public class Slideshow extends Menu
                 }
 
                 message.editMessage(renderPage(targetPage)).queue(m -> pagination(m, targetPage));
-                mre.getMessage().delete().queue(v -> {}, t -> {}); // delete the calling message so it doesn't get spammy
+                mre.getMessage().delete().queue(v -> {
+                }, t -> {
+                }); // delete the calling message so it doesn't get spammy
             }
         }, timeout, unit, () -> finalAction.accept(message));
     }
 
-    private void paginationWithoutTextInput(Message message, int pageNum)
-    {
+    private void paginationWithoutTextInput(Message message, int pageNum) {
         waiter.waitForEvent(MessageReactionAddEvent.class,
             event -> checkReaction(event, message.getIdLong()),
             event -> handleMessageReactionAddAction(event, message, pageNum),
@@ -261,12 +243,10 @@ public class Slideshow extends Menu
     }
 
     // Private method that checks MessageReactionAddEvents
-    private boolean checkReaction(MessageReactionAddEvent event, long messageId)
-    {
-        if(event.getMessageIdLong() != messageId)
+    private boolean checkReaction(MessageReactionAddEvent event, long messageId) {
+        if (event.getMessageIdLong() != messageId)
             return false;
-        switch(event.getReactionEmote().getName())
-        {
+        switch (event.getReactionEmote().getName()) {
             // LEFT, STOP, RIGHT, BIG_LEFT, BIG_RIGHT all fall-through to
             // return if the User is valid or not. If none trip, this defaults
             // and returns false.
@@ -283,41 +263,35 @@ public class Slideshow extends Menu
     }
 
     // Private method that handles MessageReactionAddEvents
-    private void handleMessageReactionAddAction(MessageReactionAddEvent event, Message message, int pageNum)
-    {
+    private void handleMessageReactionAddAction(MessageReactionAddEvent event, Message message, int pageNum) {
         int newPageNum = pageNum;
         int pages = urls.size();
-        switch(event.getReaction().getReactionEmote().getName())
-        {
+        switch (event.getReaction().getReactionEmote().getName()) {
             case LEFT:
-                if(newPageNum == 1 && wrapPageEnds)
+                if (newPageNum == 1 && wrapPageEnds)
                     newPageNum = pages + 1;
-                if(newPageNum > 1)
+                if (newPageNum > 1)
                     newPageNum--;
                 break;
             case RIGHT:
-                if(newPageNum == pages && wrapPageEnds)
+                if (newPageNum == pages && wrapPageEnds)
                     newPageNum = 0;
-                if(newPageNum < pages)
+                if (newPageNum < pages)
                     newPageNum++;
                 break;
             case BIG_LEFT:
-                if(newPageNum > 1 || wrapPageEnds)
-                {
-                    for(int i = 1; (newPageNum > 1 || wrapPageEnds) && i < bulkSkipNumber; i++)
-                    {
-                        if(newPageNum == 1 && wrapPageEnds)
+                if (newPageNum > 1 || wrapPageEnds) {
+                    for (int i = 1; (newPageNum > 1 || wrapPageEnds) && i < bulkSkipNumber; i++) {
+                        if (newPageNum == 1 && wrapPageEnds)
                             newPageNum = pages + 1;
                         newPageNum--;
                     }
                 }
                 break;
             case BIG_RIGHT:
-                if(newPageNum < pages || wrapPageEnds)
-                {
-                    for(int i = 1; (newPageNum < pages || wrapPageEnds) && i < bulkSkipNumber; i++)
-                    {
-                        if(newPageNum == pages && wrapPageEnds)
+                if (newPageNum < pages || wrapPageEnds) {
+                    for (int i = 1; (newPageNum < pages || wrapPageEnds) && i < bulkSkipNumber; i++) {
+                        if (newPageNum == pages && wrapPageEnds)
                             newPageNum = 0;
                         newPageNum++;
                     }
@@ -330,23 +304,23 @@ public class Slideshow extends Menu
 
         try {
             event.getReaction().removeReaction(event.getUser()).queue();
-        } catch(PermissionException ignored) {}
+        } catch (PermissionException ignored) {
+        }
 
         int n = newPageNum;
         message.editMessage(renderPage(newPageNum)).queue(m -> pagination(m, n));
     }
-    
-    private Message renderPage(int pageNum)
-    {
+
+    private Message renderPage(int pageNum) {
         MessageBuilder mbuilder = new MessageBuilder();
         EmbedBuilder ebuilder = new EmbedBuilder();
-        ebuilder.setImage(urls.get(pageNum-1));
+        ebuilder.setImage(urls.get(pageNum - 1));
         ebuilder.setColor(color.apply(pageNum, urls.size()));
         ebuilder.setDescription(description.apply(pageNum, urls.size()));
-        if(showPageNumbers)
-            ebuilder.setFooter("Image "+pageNum+"/"+urls.size(), null);
+        if (showPageNumbers)
+            ebuilder.setFooter("Image " + pageNum + "/" + urls.size(), null);
         mbuilder.setEmbed(ebuilder.build());
-        if(text!=null)
+        if (text != null)
             mbuilder.append(text.apply(pageNum, urls.size()));
         return mbuilder.build();
     }
@@ -357,11 +331,10 @@ public class Slideshow extends Menu
      *
      * @author John Grosh
      */
-    public static class Builder extends Menu.Builder<Builder, Slideshow>
-    {
-        private BiFunction<Integer,Integer,Color> color = (page, pages) -> null;
-        private BiFunction<Integer,Integer,String> text = (page, pages) -> null;
-        private BiFunction<Integer,Integer,String> description = (page, pages) -> null;
+    public static class Builder extends Menu.Builder<Builder, Slideshow> {
+        private BiFunction<Integer, Integer, Color> color = (page, pages) -> null;
+        private BiFunction<Integer, Integer, String> text = (page, pages) -> null;
+        private BiFunction<Integer, Integer, String> description = (page, pages) -> null;
         private Consumer<Message> finalAction = m -> m.delete().queue();
         private boolean showPageNumbers = true;
         private boolean waitOnSinglePage = false;
@@ -387,8 +360,7 @@ public class Slideshow extends Menu
          *         </ul>
          */
         @Override
-        public Slideshow build()
-        {
+        public Slideshow build() {
             Checks.check(waiter != null, "Must set an EventWaiter");
             Checks.check(!strings.isEmpty(), "Must include at least one item to paginate");
 
@@ -399,21 +371,20 @@ public class Slideshow extends Menu
         }
 
         /**
-         * Sets the {@link java.awt.Color Color} of the {@link net.dv8tion.jda.core.entities.MessageEmbed MessageEmbed}.
+         * Sets the {@link java.awt.Color Color} of the {@link net.dv8tion.jda.api.entities.MessageEmbed MessageEmbed}.
          *
          * @param  color
          *         The Color of the MessageEmbed
          *
          * @return This builder
          */
-        public Builder setColor(Color color)
-        {
+        public Builder setColor(Color color) {
             this.color = (i0, i1) -> color;
             return this;
         }
 
         /**
-         * Sets the {@link java.awt.Color Color} of the {@link net.dv8tion.jda.core.entities.MessageEmbed MessageEmbed},
+         * Sets the {@link java.awt.Color Color} of the {@link net.dv8tion.jda.api.entities.MessageEmbed MessageEmbed},
          * relative to the total page number and the current page as determined by the provided
          * {@link java.util.function.BiFunction BiFunction}.
          * <br>As the page changes, the BiFunction will re-process the current page number and the total
@@ -424,14 +395,13 @@ public class Slideshow extends Menu
          *
          * @return This builder
          */
-        public Builder setColor(BiFunction<Integer,Integer,Color> colorBiFunction)
-        {
+        public Builder setColor(BiFunction<Integer, Integer, Color> colorBiFunction) {
             this.color = colorBiFunction;
             return this;
         }
 
         /**
-         * Sets the text of the {@link net.dv8tion.jda.core.entities.Message Message} to be displayed
+         * Sets the text of the {@link net.dv8tion.jda.api.entities.Message Message} to be displayed
          * when the {@link com.jagrosh.jdautilities.menu.Slideshow Slideshow} is built.
          *
          * <p>This is displayed directly above the embed.
@@ -441,14 +411,13 @@ public class Slideshow extends Menu
          *
          * @return This builder
          */
-        public Builder setText(String text)
-        {
+        public Builder setText(String text) {
             this.text = (i0, i1) -> text;
             return this;
         }
 
         /**
-         * Sets the text of the {@link net.dv8tion.jda.core.entities.Message Message} to be displayed
+         * Sets the text of the {@link net.dv8tion.jda.api.entities.Message Message} to be displayed
          * relative to the total page number and the current page as determined by the provided
          * {@link java.util.function.BiFunction BiFunction}.
          * <br>As the page changes, the BiFunction will re-process the current page number and the total
@@ -459,15 +428,14 @@ public class Slideshow extends Menu
          *
          * @return This builder
          */
-        public Builder setText(BiFunction<Integer,Integer,String> textBiFunction)
-        {
+        public Builder setText(BiFunction<Integer, Integer, String> textBiFunction) {
             this.text = textBiFunction;
             return this;
         }
 
         /**
-         * Sets the description of the {@link net.dv8tion.jda.core.entities.MessageEmbed MessageEmbed}
-         * in the {@link net.dv8tion.jda.core.entities.Message Message} to be displayed when the
+         * Sets the description of the {@link net.dv8tion.jda.api.entities.MessageEmbed MessageEmbed}
+         * in the {@link net.dv8tion.jda.api.entities.Message Message} to be displayed when the
          * {@link com.jagrosh.jdautilities.menu.Slideshow Slideshow} is built.
          *
          * @param  description
@@ -475,15 +443,14 @@ public class Slideshow extends Menu
          *
          * @return This builder
          */
-        public Builder setDescription(String description)
-        {
+        public Builder setDescription(String description) {
             this.description = (i0, i1) -> description;
             return this;
         }
 
         /**
-         * Sets the description of the {@link net.dv8tion.jda.core.entities.MessageEmbed MessageEmbed}
-         * in the {@link net.dv8tion.jda.core.entities.Message Message} to be displayed relative to the
+         * Sets the description of the {@link net.dv8tion.jda.api.entities.MessageEmbed MessageEmbed}
+         * in the {@link net.dv8tion.jda.api.entities.Message Message} to be displayed relative to the
          * total page number and the current page as determined by the provided {@link java.util.function.BiFunction BiFunction}.
          * <br>As the page changes, the BiFunction will re-process the current page number and the total
          * page number, allowing for the displayed description of the MessageEmbed to change depending on the page number.
@@ -493,8 +460,7 @@ public class Slideshow extends Menu
          *
          * @return This builder
          */
-        public Builder setDescription(BiFunction<Integer,Integer,String> descriptionBiFunction)
-        {
+        public Builder setDescription(BiFunction<Integer, Integer, String> descriptionBiFunction) {
             this.description = descriptionBiFunction;
             return this;
         }
@@ -508,8 +474,7 @@ public class Slideshow extends Menu
          *
          * @return This builder
          */
-        public Builder setFinalAction(Consumer<Message> finalAction)
-        {
+        public Builder setFinalAction(Consumer<Message> finalAction) {
             this.finalAction = finalAction;
             return this;
         }
@@ -522,8 +487,7 @@ public class Slideshow extends Menu
          *
          * @return This builder
          */
-        public Builder showPageNumbers(boolean show)
-        {
+        public Builder showPageNumbers(boolean show) {
             this.showPageNumbers = show;
             return this;
         }
@@ -537,8 +501,7 @@ public class Slideshow extends Menu
          *
          * @return This builder
          */
-        public Builder waitOnSinglePage(boolean wait)
-        {
+        public Builder waitOnSinglePage(boolean wait) {
             this.waitOnSinglePage = wait;
             return this;
         }
@@ -551,8 +514,7 @@ public class Slideshow extends Menu
          *
          * @return This builder
          */
-        public Builder addItems(String... items)
-        {
+        public Builder addItems(String... items) {
             strings.addAll(Arrays.asList(items));
             return this;
         }
@@ -566,8 +528,7 @@ public class Slideshow extends Menu
          *
          * @return This builder
          */
-        public Builder setUrls(String... items)
-        {
+        public Builder setUrls(String... items) {
             strings.clear();
             strings.addAll(Arrays.asList(items));
             return this;
@@ -582,8 +543,7 @@ public class Slideshow extends Menu
          *
          * @return This builder
          */
-        public Builder setBulkSkipNumber(int bulkSkipNumber)
-        {
+        public Builder setBulkSkipNumber(int bulkSkipNumber) {
             this.bulkSkipNumber = Math.max(bulkSkipNumber, 1);
             return this;
         }
@@ -597,8 +557,7 @@ public class Slideshow extends Menu
          *
          * @return This builder
          */
-        public Builder wrapPageEnds(boolean wrapPageEnds)
-        {
+        public Builder wrapPageEnds(boolean wrapPageEnds) {
             this.wrapPageEnds = wrapPageEnds;
             return this;
         }
@@ -617,8 +576,7 @@ public class Slideshow extends Menu
          *
          * @return This builder
          */
-        public Builder allowTextInput(boolean allowTextInput)
-        {
+        public Builder allowTextInput(boolean allowTextInput) {
             this.allowTextInput = allowTextInput;
             return this;
         }
@@ -626,7 +584,7 @@ public class Slideshow extends Menu
         /**
          * Sets the {@link com.jagrosh.jdautilities.menu.Slideshow Slideshow} to traverse
          * left or right when a provided text input is sent in the form of a Message to
-         * the {@link net.dv8tion.jda.core.entities.Channel Channel} the menu is displayed in.
+         * the {the {@link net.dv8tion.jda.api.entities.GuildChannel GuildChannel}} the menu is displayed in.
          *
          * <p>If one or both these parameters are provided {@code null} this resets
          * both of them and they will no longer be available when the Slideshow is built.
@@ -638,15 +596,11 @@ public class Slideshow extends Menu
          *
          * @return This builder
          */
-        public Builder setLeftRightText(String left, String right)
-        {
-            if(left == null || right == null)
-            {
+        public Builder setLeftRightText(String left, String right) {
+            if (left == null || right == null) {
                 textToLeft = null;
                 textToRight = null;
-            }
-            else
-            {
+            } else {
                 textToLeft = left;
                 textToRight = right;
             }

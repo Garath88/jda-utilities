@@ -15,15 +15,16 @@
  */
 package com.jagrosh.jdautilities.command;
 
-import com.jagrosh.jdautilities.command.Command.*;
-
-import net.dv8tion.jda.core.Permission;
-
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+
+import com.jagrosh.jdautilities.command.Command.Category;
+import com.jagrosh.jdautilities.command.Command.CooldownScope;
+
+import net.dv8tion.jda.api.Permission;
 
 /**
  * A chain-setter based builder for {@link com.jagrosh.jdautilities.command.Command Commands}.

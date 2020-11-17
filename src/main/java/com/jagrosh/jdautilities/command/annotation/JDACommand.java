@@ -22,7 +22,7 @@ import java.lang.annotation.Target;
 
 import com.jagrosh.jdautilities.command.Command;
 
-import net.dv8tion.jda.core.Permission;
+import net.dv8tion.jda.api.Permission;
 
 /**
  * An Annotation applicable to {@link java.lang.reflect.Method Method}s that will act as
@@ -59,15 +59,13 @@ import net.dv8tion.jda.core.Permission;
  *
  * }</code></pre>
  *
- * @see    com.jagrosh.jdautilities.command.annotation.JDACommand.Module
- *
- * @since  1.7
  * @author Kaidan Gustave
+ * @see com.jagrosh.jdautilities.command.annotation.JDACommand.Module
+ * @since 1.7
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface JDACommand
-{
+public @interface JDACommand {
     /**
      * The name and aliases of the command.
      *
@@ -76,7 +74,7 @@ public @interface JDACommand
      * @return An array of strings, the first one being the name
      * of the command, and following ones being aliases.
      */
-    String[] name() default {"null"};
+    String[] name() default { "null" };
 
     /**
      * The help string for a command.
@@ -99,7 +97,7 @@ public @interface JDACommand
      *
      * @return The name of a role required to use this command.
      */
-    String[] requiredRoles() default {"null"};
+    String[] requiredRoles() default { "null" };
 
     /**
      * Whether or not the command is owner only.
@@ -129,7 +127,7 @@ public @interface JDACommand
     Cooldown cooldown() default @Cooldown(0);
 
     /**
-     * The {@link net.dv8tion.jda.core.Permission Permissions} the bot must have
+     * The {@link net.dv8tion.jda.api.Permission Permissions} the bot must have
      * on a guild to use this command.
      *
      * @return The required permissions the bot must have to use this command.
@@ -137,7 +135,7 @@ public @interface JDACommand
     Permission[] botPermissions() default {};
 
     /**
-     * The {@link net.dv8tion.jda.core.Permission Permissions} the user must have
+     * The {@link net.dv8tion.jda.api.Permission Permissions} the user must have
      * on a guild to use this command.
      *
      * @return The required permissions a user must have to use this command.
@@ -190,12 +188,11 @@ public @interface JDACommand
      * <br>The arrangement of the double parameters is not important, so methods
      * may do it as {@code (CommandEvent, Command)} or {@code (Command, CommandEvent)}.
      *
-     * @see    JDACommand
+     * @see JDACommand
      */
     @Target(ElementType.TYPE)
     @Retention(RetentionPolicy.RUNTIME)
-    @interface Module
-    {
+    @interface Module {
         /**
          * The names of any methods that will be targeted when compiling this object
          * using the {@link com.jagrosh.jdautilities.command.AnnotatedModuleCompiler
@@ -217,12 +214,11 @@ public @interface JDACommand
      * The default {@link com.jagrosh.jdautilities.command.Command.CooldownScope CooldownScope}
      * is {@link com.jagrosh.jdautilities.command.Command.CooldownScope#USER CooldownScope.USER}.
      *
-     * @see    JDACommand#cooldown()
+     * @see JDACommand#cooldown()
      */
     @Target(ElementType.TYPE)
     @Retention(RetentionPolicy.RUNTIME)
-    @interface Cooldown
-    {
+    @interface Cooldown {
         /**
          * The number of seconds the annotated Command will be on cooldown.
          *
@@ -253,12 +249,11 @@ public @interface JDACommand
      * and any other attempted inputs will result in errors from the
      * {@link com.jagrosh.jdautilities.command.AnnotatedModuleCompiler compiler}.
      *
-     * @see    com.jagrosh.jdautilities.command.annotation.JDACommand#category()
+     * @see com.jagrosh.jdautilities.command.annotation.JDACommand#category()
      */
     @Target(ElementType.TYPE)
     @Retention(RetentionPolicy.RUNTIME)
-    @interface Category
-    {
+    @interface Category {
         /**
          * The name of the <b>static field</b> in the {@link com.jagrosh.jdautilities.command.annotation.JDACommand.Category#location()
          * target class} that will be the category for the annotated command.

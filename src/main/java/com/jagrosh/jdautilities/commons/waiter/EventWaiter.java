@@ -34,23 +34,24 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import net.dv8tion.jda.core.entities.User;
-import net.dv8tion.jda.core.events.Event;
-import net.dv8tion.jda.core.events.ShutdownEvent;
-import net.dv8tion.jda.core.hooks.EventListener;
-import net.dv8tion.jda.core.hooks.SubscribeEvent;
-import net.dv8tion.jda.core.utils.Checks;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.Event;
+import net.dv8tion.jda.api.events.GenericEvent;
+import net.dv8tion.jda.api.events.ShutdownEvent;
+import net.dv8tion.jda.api.hooks.EventListener;
+import net.dv8tion.jda.api.hooks.SubscribeEvent;
+import net.dv8tion.jda.internal.utils.Checks;
 
 /**
  * <p>The EventWaiter is capable of handling specialized forms of
- * {@link net.dv8tion.jda.core.events.Event Event} that must meet criteria not normally specifiable
- * without implementation of an {@link net.dv8tion.jda.core.hooks.EventListener EventListener}.
+ * {@link net.dv8tion.jda.api.events.Event Event} that must meet criteria not normally specifiable
+ * without implementation of an {@link net.dv8tion.jda.api.hooks.EventListener EventListener}.
  *
  * <p>Creating an EventWaiter requires provision and/or creation of a
  * {@link java.util.concurrent.ScheduledExecutorService Executor}, and thus a proper
  * shutdown of said executor. The default constructor for an EventWaiter sets up a
  * working, "live", EventWaiter whose shutdown is triggered via JDA firing a
- * {@link net.dv8tion.jda.core.events.ShutdownEvent ShutdownEvent}.
+ * {@link net.dv8tion.jda.api.events.ShutdownEvent ShutdownEvent}.
  * <br>A more "shutdown adaptable" constructor allows the provision of a
  * {@code ScheduledExecutorService} and a choice of how exactly shutdown will be handled
  * (see {@link EventWaiter#EventWaiter(ScheduledExecutorService, boolean)} for more details).
@@ -85,7 +86,7 @@ public class EventWaiter implements EventListener {
      * <p>{@code shutdownAutomatically} is required to be manually specified by developers as a way of
      * verifying a contract that the developer will conform to the behavior of the newly generated EventWaiter:
      * <ul>
-     * <li>If {@code true}, shutdown is handled when a {@link net.dv8tion.jda.core.events.ShutdownEvent ShutdownEvent}
+     * <li>If {@code true}, shutdown is handled when a {@link net.dv8tion.jda.api.events.ShutdownEvent ShutdownEvent}
      * is fired. This means that any external functions of the provided Executor is now impossible and any externally
      * queued tasks are lost if they have yet to be run.</li>
      * <li>If {@code false}, shutdown is now placed as a responsibility of the developer, and no attempt will be
@@ -99,7 +100,7 @@ public class EventWaiter implements EventListener {
      *
      * @param threadpool The ScheduledExecutorService to use for this EventWaiter's threadpool.
      * @param shutdownAutomatically Whether or not the {@code threadpool} will shutdown automatically when a
-     * {@link net.dv8tion.jda.core.events.ShutdownEvent ShutdownEvent} is fired.
+     * {@link net.dv8tion.jda.api.events.ShutdownEvent ShutdownEvent} is fired.
      * @throws java.lang.IllegalArgumentException If the threadpool provided is {@code null} or
      *                                            {@link java.util.concurrent.ScheduledExecutorService#isShutdown() is shutdown}
      * @see com.jagrosh.jdautilities.commons.waiter.EventWaiter#shutdown() EventWaiter#shutdown()
@@ -137,7 +138,7 @@ public class EventWaiter implements EventListener {
     }
 
     /**
-     * Waits an indefinite amount of time for an {@link net.dv8tion.jda.core.events.Event Event} that
+     * Waits an indefinite amount of time for an {@link net.dv8tion.jda.api.events.Event Event} that
      * returns {@code true} when tested with the provided {@link java.util.function.Predicate Predicate}.
      *
      * <p>When this occurs, the provided {@link java.util.function.Consumer Consumer} will accept and
@@ -165,7 +166,7 @@ public class EventWaiter implements EventListener {
     }
 
     /**
-     * Waits a predetermined amount of time for an {@link net.dv8tion.jda.core.events.Event Event} that
+     * Waits a predetermined amount of time for an {@link net.dv8tion.jda.api.events.Event Event} that
      * returns {@code true} when tested with the provided {@link java.util.function.Predicate Predicate}.
      *
      * <p>Once started, there are two possible outcomes:
@@ -222,7 +223,7 @@ public class EventWaiter implements EventListener {
     @Override
     @SubscribeEvent
     @SuppressWarnings("unchecked")
-    public final void onEvent(Event event) {
+    public final void onEvent(GenericEvent event) {
         Class c = event.getClass();
         // Runs at least once for the fired Event, at most
         // once for each superclass (excluding Object) because
@@ -273,7 +274,7 @@ public class EventWaiter implements EventListener {
         threadpool.shutdown();
     }
 
-    class WaitingEvent<T extends Event> {
+    class WaitingEvent<T extends GenericEvent> {
         final Predicate<T> condition;
         final Consumer<T> action;
         final User user;

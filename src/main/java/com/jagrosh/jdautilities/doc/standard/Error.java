@@ -15,11 +15,16 @@
  */
 package com.jagrosh.jdautilities.doc.standard;
 
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Repeatable;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 import com.jagrosh.jdautilities.doc.ConvertedBy;
 import com.jagrosh.jdautilities.doc.DocConverter;
 import com.jagrosh.jdautilities.doc.DocMultiple;
-
-import java.lang.annotation.*;
 
 /**
  * A CommandDoc {@link java.lang.annotation.Annotation Annotation} that describes
@@ -40,10 +45,9 @@ import java.lang.annotation.*;
  *     &#8226; "An unexpected error occurred!" - Let's just blame Onitor!
  * </pre>
  *
- * @see    com.jagrosh.jdautilities.doc.standard.Errors
- *
- * @since  2.0
  * @author Kaidan Gustave
+ * @see com.jagrosh.jdautilities.doc.standard.Errors
+ * @since 2.0
  */
 @ConvertedBy(Error.Converter.class)
 @DocMultiple(
@@ -53,9 +57,8 @@ import java.lang.annotation.*;
 @Documented
 @Repeatable(Errors.class)
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE, ElementType.METHOD})
-public @interface Error
-{
+@Target({ ElementType.TYPE, ElementType.METHOD })
+public @interface Error {
     /**
      * A brief description of what caused the error.
      *
@@ -89,13 +92,11 @@ public @interface Error
      * for the {@link com.jagrosh.jdautilities.doc.standard.Error @Error}
      * annotation.
      */
-    class Converter implements DocConverter<Error>
-    {
+    class Converter implements DocConverter<Error> {
         @Override
-        public String read(Error annotation)
-        {
+        public String read(Error annotation) {
             StringBuilder b = new StringBuilder(annotation.prefix());
-            if(!annotation.response().isEmpty())
+            if (!annotation.response().isEmpty())
                 b.append("\"").append(annotation.response()).append("\" - ");
             b.append(annotation.value());
             return b.toString();

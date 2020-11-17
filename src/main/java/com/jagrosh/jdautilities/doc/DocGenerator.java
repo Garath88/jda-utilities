@@ -15,11 +15,6 @@
  */
 package com.jagrosh.jdautilities.doc;
 
-import com.jagrosh.jdautilities.commons.utils.FixedSizeCache;
-import com.jagrosh.jdautilities.doc.standard.CommandInfo;
-import com.jagrosh.jdautilities.doc.standard.Error;
-import com.jagrosh.jdautilities.doc.standard.RequiredPermissions;
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.InvocationTargetException;
@@ -29,6 +24,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import com.jagrosh.jdautilities.commons.utils.FixedSizeCache;
+import com.jagrosh.jdautilities.doc.standard.CommandInfo;
+import com.jagrosh.jdautilities.doc.standard.Error;
+import com.jagrosh.jdautilities.doc.standard.RequiredPermissions;
 
 /**
  * An instance based documentation engine for bot commands written in JDA.
@@ -59,14 +59,12 @@ import java.util.stream.Collectors;
  * command system that uses Class and/or Method based commands, and works in any JVM
  * language that supports annotations.
  *
- * @see    com.jagrosh.jdautilities.doc.ConvertedBy
- * @see    com.jagrosh.jdautilities.doc.DocConverter
- *
- * @since  2.0
  * @author Kaidan Gustave
+ * @see com.jagrosh.jdautilities.doc.ConvertedBy
+ * @see com.jagrosh.jdautilities.doc.DocConverter
+ * @since 2.0
  */
-public class DocGenerator
-{
+public class DocGenerator {
     private final HashMap<Class<? extends Annotation>, DocConverter<? extends Annotation>> map;
     private final FixedSizeCache<AnnotatedElement, String> cache;
     private final String separator;
@@ -81,19 +79,17 @@ public class DocGenerator
      *
      * @return The default DocGenerator with standard conversions loaded.
      */
-    public static DocGenerator getDefaultGenerator()
-    {
+    public static DocGenerator getDefaultGenerator() {
         return new DocGenerator()
-                .register(CommandInfo.class)
-                .register(Error.class)
-                .register(RequiredPermissions.class);
+            .register(CommandInfo.class)
+            .register(Error.class)
+            .register(RequiredPermissions.class);
     }
 
     /**
      * Gets a blank DocGenerator with no conversions loaded.
      */
-    public DocGenerator()
-    {
+    public DocGenerator() {
         this(20);
     }
 
@@ -109,10 +105,9 @@ public class DocGenerator
      *
      * @param  cacheSize
      *         The of the cache size that contains previously generated CommandDoc
-     *         to reduce reflection overhead for repeated calls.
+     * to reduce reflection overhead for repeated calls.
      */
-    public DocGenerator(int cacheSize)
-    {
+    public DocGenerator(int cacheSize) {
         this("\n\n", cacheSize);
     }
 
@@ -134,13 +129,12 @@ public class DocGenerator
      *
      * @param  separator
      *         The separator that occurs inbetween
-     *         annotation conversions.
+     * annotation conversions.
      * @param  cacheSize
      *         The of the cache size that contains previously generated CommandDoc
-     *         to reduce reflection overhead for repeated calls.
+     * to reduce reflection overhead for repeated calls.
      */
-    public DocGenerator(String separator, int cacheSize)
-    {
+    public DocGenerator(String separator, int cacheSize) {
         this.separator = separator;
         map = new HashMap<>();
         cache = new FixedSizeCache<>(cacheSize);
@@ -155,8 +149,7 @@ public class DocGenerator
      *
      * @return The documentation read from the Class.
      */
-    public String getDocFor(Class<?> cla)
-    {
+    public String getDocFor(Class<?> cla) {
         return read(cla);
     }
 
@@ -169,8 +162,7 @@ public class DocGenerator
      *
      * @return The documentation read from the Method.
      */
-    public String getDocFor(Method method)
-    {
+    public String getDocFor(Method method) {
         return read(method);
     }
 
@@ -186,13 +178,11 @@ public class DocGenerator
      *
      * @return A List of individual Method CommandDocs
      */
-    public List<String> getDocForMethods(Class<?> cla)
-    {
+    public List<String> getDocForMethods(Class<?> cla) {
         List<String> list = new ArrayList<>();
-        for(Method method : cla.getMethods())
-        {
+        for (Method method : cla.getMethods()) {
             String doc = read(method);
-            if(!doc.isEmpty())
+            if (!doc.isEmpty())
                 list.add(doc);
         }
         return list;
@@ -211,8 +201,8 @@ public class DocGenerator
      *         The annotation Class type.
      * @param  converterParams
      *         The parameters necessary to instantiate the proper DocConverter.
-     *         <br>DocConverters can have multiple constructors, although it's
-     *         discouraged.
+     * <br>DocConverters can have multiple constructors, although it's
+     * discouraged.
      *
      * @throws IllegalArgumentException
      *         The annotation class provided is not annotated with
@@ -224,34 +214,27 @@ public class DocGenerator
      *
      * @return This DocGenerator
      */
-    @SuppressWarnings({"JavaReflectionMemberAccess","unchecked"})
-    public <T extends Annotation> DocGenerator register(Class<T> type, Object... converterParams)
-    {
+    @SuppressWarnings({ "JavaReflectionMemberAccess", "unchecked" })
+    public <T extends Annotation> DocGenerator register(Class<T> type, Object... converterParams) {
         ConvertedBy convertedBy = type.getAnnotation(ConvertedBy.class);
 
-        if(convertedBy == null)
+        if (convertedBy == null)
             throw new IllegalArgumentException("Illegal annotation type! Not annotated with @ConvertedBy!");
 
         final DocConverter<T> instance;
-        try
-        {
+        try {
             // If parameters are specified
-            if(converterParams.length > 0)
-            {
+            if (converterParams.length > 0) {
                 Class<?>[] tArray = Arrays.stream(converterParams)
                     .map(Object::getClass)
                     .collect(Collectors.toList())
                     .toArray(new Class[converterParams.length]);
                 instance = convertedBy.value().getDeclaredConstructor(tArray).newInstance(converterParams);
-            }
-            else
-            {
+            } else {
                 instance = convertedBy.value().getConstructor().newInstance();
             }
-        }
-        catch(InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e)
-        {
-            throw new IllegalArgumentException("Instance of "+convertedBy.value()+" could not be instantiated!", e);
+        } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+            throw new IllegalArgumentException("Instance of " + convertedBy.value() + " could not be instantiated!", e);
         }
 
         return register(type, instance);
@@ -276,57 +259,48 @@ public class DocGenerator
      *
      * @return This DocGenerator
      */
-    public <T extends Annotation> DocGenerator register(Class<T> type, DocConverter<T> converter)
-    {
-        synchronized(map)
-        {
+    public <T extends Annotation> DocGenerator register(Class<T> type, DocConverter<T> converter) {
+        synchronized (map) {
             map.put(type, converter);
         }
         return this;
     }
 
     @SuppressWarnings("unchecked")
-    private String read(AnnotatedElement ae)
-    {
+    private String read(AnnotatedElement ae) {
         // Have we already read this?
-        if(cache.contains(ae))
+        if (cache.contains(ae))
             return cache.get(ae);
 
         StringBuilder b = new StringBuilder();
-        synchronized(map)
-        {
+        synchronized (map) {
             int lastIndex = map.keySet().size() - 1;
             int index = 0;
-            for(Class<? extends Annotation> key : map.keySet())
-            {
+            for (Class<? extends Annotation> key : map.keySet()) {
                 DocMultiple docMultiple = key.getAnnotation(DocMultiple.class);
-                if(docMultiple == null)
-                {
+                if (docMultiple == null) {
                     Annotation a = ae.getAnnotation(key);
 
                     // Is not annotated with that particular annotation
-                    if(a == null)
+                    if (a == null)
                         continue;
 
                     b.append(((DocConverter<Annotation>)map.get(key)).read(a));
-                    if(index < lastIndex)
+                    if (index < lastIndex)
                         b.append(separator);
-                }
-                else
-                {
+                } else {
                     Annotation[] ans = ae.getAnnotationsByType(key);
                     int len = ans.length;
-                    for(int i = 0; i < len; i++)
-                    {
-                        if(i == 0)
+                    for (int i = 0; i < len; i++) {
+                        if (i == 0)
                             b.append(docMultiple.preface());
 
                         b.append(docMultiple.prefixEach())
                             .append(((DocConverter<Annotation>)map.get(key)).read(ans[i]));
 
-                        if(i < len - 1)
+                        if (i < len - 1)
                             b.append(docMultiple.separateBy());
-                        else if(index < lastIndex)
+                        else if (index < lastIndex)
                             b.append(separator);
                     }
                 }

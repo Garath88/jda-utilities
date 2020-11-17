@@ -15,28 +15,32 @@
  */
 package com.jagrosh.jdautilities.doc.standard;
 
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 import com.jagrosh.jdautilities.doc.ConvertedBy;
 import com.jagrosh.jdautilities.doc.DocConverter;
-import net.dv8tion.jda.core.Permission;
 
-import java.lang.annotation.*;
+import net.dv8tion.jda.api.Permission;
 
 /**
  * A CommandDoc {@link java.lang.annotation.Annotation Annotation} that lists
- * required {@link net.dv8tion.jda.core.Permission Permission}s a bot must have
- * to use a command on a {@link net.dv8tion.jda.core.entities.Guild Guild}.
+ * required {@link net.dv8tion.jda.api.Permission Permission}s a bot must have
+ * to use a command on a {@link net.dv8tion.jda.api.entities.Guild Guild}.
  *
- * @since  2.0
  * @author Kaidan Gustave
+ * @since 2.0
  */
 @ConvertedBy(RequiredPermissions.Converter.class)
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE, ElementType.METHOD})
-public @interface RequiredPermissions
-{
+@Target({ ElementType.TYPE, ElementType.METHOD })
+public @interface RequiredPermissions {
     /**
-     * An array of {@link net.dv8tion.jda.core.Permission Permission}s
+     * An array of {@link net.dv8tion.jda.api.Permission Permission}s
      * a bot must have to run the command.
      *
      * @return The array of permissions
@@ -48,18 +52,15 @@ public @interface RequiredPermissions
      * {@link com.jagrosh.jdautilities.doc.standard.RequiredPermissions @RequiredPermissions}
      * annotation.
      */
-    class Converter implements DocConverter<RequiredPermissions>
-    {
+    class Converter implements DocConverter<RequiredPermissions> {
         @Override
-        public String read(RequiredPermissions annotation)
-        {
+        public String read(RequiredPermissions annotation) {
             Permission[] permissions = annotation.value();
 
             StringBuilder b = new StringBuilder();
 
             b.append("Bot must have permissions:");
-            switch (permissions.length)
-            {
+            switch (permissions.length) {
                 case 0:
                     b.append(" None");
                     break;
@@ -67,8 +68,7 @@ public @interface RequiredPermissions
                     b.append(" `").append(permissions[0].getName()).append("`");
                     break;
                 default:
-                    for (int i = 0; i < permissions.length; i++)
-                    {
+                    for (int i = 0; i < permissions.length; i++) {
                         b.append(" `").append(permissions[i]).append("`");
                         if (i != permissions.length - 1)
                             b.append(",");

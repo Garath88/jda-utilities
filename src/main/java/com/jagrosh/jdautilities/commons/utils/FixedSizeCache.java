@@ -26,11 +26,10 @@ import java.util.Map;
  * <p>As new elements are inserted into the cache, older ones may be removed as a result of the cache
  * being at the maximum capacity set at instantiation.
  *
- * @since  1.3
  * @author Michael Ritter
+ * @since 1.3
  */
-public class FixedSizeCache<K, V>
-{
+public class FixedSizeCache<K, V> {
     private final Map<K, V> map;
     private final K[] keys;
     private int currIndex = 0;
@@ -47,12 +46,11 @@ public class FixedSizeCache<K, V>
      *         The size of the FixedSizeCache to be created.
      */
     @SuppressWarnings("unchecked")
-    public FixedSizeCache(int size)
-    {
+    public FixedSizeCache(int size) {
         this.map = new HashMap<>();
-        if(size < 1)
+        if (size < 1)
             throw new IllegalArgumentException("Cache size must be at least 1!");
-        this.keys = (K[]) new Object[size];
+        this.keys = (K[])new Object[size];
     }
 
     /**
@@ -70,12 +68,10 @@ public class FixedSizeCache<K, V>
      * @param  value
      *         The value to pair with the key
      *
-     * @see    java.util.HashMap#put(Object, Object) HashMap#put(Object, Object)
+     * @see java.util.HashMap#put(Object, Object) HashMap#put(Object, Object)
      */
-    public void add(K key, V value)
-    {
-        if(keys[currIndex] != null)
-        {
+    public void add(K key, V value) {
+        if (keys[currIndex] != null) {
             map.remove(keys[currIndex]);
         }
         map.put(key, value);
@@ -96,10 +92,9 @@ public class FixedSizeCache<K, V>
      *
      * @return {@code true} if the FixedSizeCache contains a key, else {@code false}
      *
-     * @see    java.util.HashMap#containsKey(Object) HashMap#containsKey(Object)
+     * @see java.util.HashMap#containsKey(Object) HashMap#containsKey(Object)
      */
-    public boolean contains(K key)
-    {
+    public boolean contains(K key) {
         return map.containsKey(key);
     }
 
@@ -116,12 +111,10 @@ public class FixedSizeCache<K, V>
      *         The key to retrieve a value for
      *
      * @return A value corresponding to the provided key, or {@code null} if there was no
-     *         value to get.
-     *
-     * @see    java.util.HashMap#get(Object) HashMap#get(Object)
+     * value to get.
+     * @see java.util.HashMap#get(Object) HashMap#get(Object)
      */
-    public V get(K key)
-    {
+    public V get(K key) {
         return map.get(key);
     }
 }

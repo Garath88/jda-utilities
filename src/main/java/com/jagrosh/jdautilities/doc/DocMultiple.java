@@ -15,7 +15,11 @@
  */
 package com.jagrosh.jdautilities.doc;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * A helper {@link java.lang.annotation.Annotation Annotation}, useful for
@@ -26,17 +30,15 @@ import java.lang.annotation.*;
  * <br>{@link com.jagrosh.jdautilities.doc.standard.Error @Error} and {@link
  * com.jagrosh.jdautilities.doc.standard.Errors @Errors} are an example of such practice.
  *
- * @see    com.jagrosh.jdautilities.doc.standard.Error
- * @see    com.jagrosh.jdautilities.doc.standard.Errors
- *
- * @since  2.0
  * @author Kaidan Gustave
+ * @see com.jagrosh.jdautilities.doc.standard.Error
+ * @see com.jagrosh.jdautilities.doc.standard.Errors
+ * @since 2.0
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.ANNOTATION_TYPE)
-public @interface DocMultiple
-{
+public @interface DocMultiple {
     /**
      * Text that occurs before all occurrences of the annotation
      * this is applied to.

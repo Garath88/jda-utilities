@@ -15,18 +15,18 @@
  */
 package com.jagrosh.jdautilities.command;
 
-import net.dv8tion.jda.core.entities.Guild;
-
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Function;
 
+import net.dv8tion.jda.api.entities.Guild;
+
 /**
  * A Bot Client interface implemented on objects used to hold bot data.
  *
  * <p>This is implemented in {@link com.jagrosh.jdautilities.command.impl.CommandClientImpl CommandClientImpl}
- * alongside implementation of {@link net.dv8tion.jda.core.hooks.EventListener EventListener} to create a
+ * alongside implementation of {@link net.dv8tion.jda.api.hooks.EventListener EventListener} to create a
  * compounded "Client Listener" which catches specific kinds of events thrown by JDA and processes them
  * automatically to handle and execute {@link com.jagrosh.jdautilities.command.Command Command}s.
  *
@@ -36,40 +36,39 @@ import java.util.function.Function;
  *
  * <p>For the CommandClientImpl, once initialized, only the following can be modified:
  * <ul>
- *     <li>{@link com.jagrosh.jdautilities.command.Command Command}s may be added or removed.</li>
- *     <li>The {@link com.jagrosh.jdautilities.command.CommandListener CommandListener} may be set.</li>
+ * <li>{@link com.jagrosh.jdautilities.command.Command Command}s may be added or removed.</li>
+ * <li>The {@link com.jagrosh.jdautilities.command.CommandListener CommandListener} may be set.</li>
  * </ul>
  *
  * @author John Grosh (jagrosh)
  *
  * @implNote
  *         While typically safe, there are a few ways to misuse the standard implementation of this interface:
- *         the CommandClientImpl.
- *         <br>Because of this the following should <b>ALWAYS</b> be followed to avoid such errors:
+ * the CommandClientImpl.
+ * <br>Because of this the following should <b>ALWAYS</b> be followed to avoid such errors:
  *
- *         <p><b>1)</b> Do not build and add more than one CommandClient to an instance JDA, <b>EVER</b>.
+ * <p><b>1)</b> Do not build and add more than one CommandClient to an instance JDA, <b>EVER</b>.
  *
- *         <p><b>2)</b> Always create and add the CommandClientImpl to JDA <b>BEFORE</b> you build it, or there is a
- *                      chance some minor errors will occur, <b>especially</b> if JDA has already fired a {@link
- *                      net.dv8tion.jda.core.events.ReadyEvent ReadyEvent}.
+ * <p><b>2)</b> Always create and add the CommandClientImpl to JDA <b>BEFORE</b> you build it, or there is a
+ * chance some minor errors will occur, <b>especially</b> if JDA has already fired a {@link
+ * net.dv8tion.jda.api.events.ReadyEvent ReadyEvent}.
  *
- *         <p><b>3)</b> Do not provide anything other than a String representing a long (and furthermore a User ID) as
- *                      an Owner ID or a CoOwner ID.  This will generate errors, but not stop the creation of the
- *                      CommandClientImpl which will cause several errors to occur very quickly after startup (except
- *                      if you provide {@code null} for the Owner ID, that'll just flat out throw an {@link
- *                      java.lang.IllegalArgumentException IllegalArgumentException}).
+ * <p><b>3)</b> Do not provide anything other than a String representing a long (and furthermore a User ID) as
+ * an Owner ID or a CoOwner ID.  This will generate errors, but not stop the creation of the
+ * CommandClientImpl which will cause several errors to occur very quickly after startup (except
+ * if you provide {@code null} for the Owner ID, that'll just flat out throw an {@link
+ * java.lang.IllegalArgumentException IllegalArgumentException}).
  *
- *         <p><b>4)</b> Do not provide strings when using {@link com.jagrosh.jdautilities.command.CommandClientBuilder#setEmojis(String, String, String)
- *                      CommandClientBuilder#setEmojis(String, String, String)} that are not unicode emojis or that do
- *                      not match the custom emote format specified in {@link net.dv8tion.jda.core.entities.Emote#getAsMention()
- *                      Emote#getAsMention()} (IE: {@code <:EmoteName:EmoteID>}).
+ * <p><b>4)</b> Do not provide strings when using {@link com.jagrosh.jdautilities.command.CommandClientBuilder#setEmojis(String, String, String)
+ * CommandClientBuilder#setEmojis(String, String, String)} that are not unicode emojis or that do
+ * not match the custom emote format specified in {@link net.dv8tion.jda.api.entities.Emote#getAsMention()
+ * Emote#getAsMention()} (IE: {@code <:EmoteName:EmoteID>}).
  *
- *         <p><b>5)</b> Avoid using {@link com.jagrosh.jdautilities.command.impl.CommandClientImpl#linkIds(long,
- *                      net.dv8tion.jda.core.entities.Message)}. This will create errors and has no real purpose outside
- *                      of it's current usage.
+ * <p><b>5)</b> Avoid using {@link com.jagrosh.jdautilities.command.impl.CommandClientImpl#linkIds(long,
+ * net.dv8tion.jda.api.entities.Message)}. This will create errors and has no real purpose outside
+ * of it's current usage.
  */
-public interface CommandClient
-{
+public interface CommandClient {
     /**
      * Gets the Client's prefix.
      *
@@ -387,7 +386,7 @@ public interface CommandClient
     String getServerInvite();
 
     /**
-     * Gets an a recently updated count of all the {@link net.dv8tion.jda.core.entities.Guild Guild}s
+     * Gets an a recently updated count of all the {@link net.dv8tion.jda.api.entities.Guild Guild}s
      * the bot is connected to on all shards.
      *
      * <p><b>NOTE:</b> This may not always or should not be assumed accurate! Any time
@@ -395,9 +394,9 @@ public interface CommandClient
      * but will not update when other shards join or leave guilds. This means that shards
      * will not always retrieve the same value. For instance:
      * <ul>
-     *     <li>1) Shard A joins 10 Guilds</li>
-     *     <li>2) Shard B invokes this method</li>
-     *     <li>3) Shard A invokes this method</li>
+     * <li>1) Shard A joins 10 Guilds</li>
+     * <li>2) Shard B invokes this method</li>
+     * <li>3) Shard A invokes this method</li>
      * </ul>
      * The number retrieved by Shard B will be that of the number retrieved by Shard A,
      * minus 10 guilds because Shard B hasn't updated and accounted for those 10 guilds
@@ -408,7 +407,7 @@ public interface CommandClient
      * <a href="http://bots.discord.pw/">Discord Bots</a> website.
      *
      * @return A recently updated count of all the Guilds the bot is connected to on
-     *         all shards.
+     * all shards.
      */
     int getTotalGuilds();
 
@@ -423,26 +422,26 @@ public interface CommandClient
      * Gets whether this CommandClient uses linked deletion.
      *
      * <p>Linking calls is the basic principle of pairing bot responses with their calling
-     * {@link net.dv8tion.jda.core.entities.Message Message}s.
+     * {@link net.dv8tion.jda.api.entities.Message Message}s.
      * <br>Using this with a basic function such as deletion, this causes bots to delete their
      * Messages as a response to the calling Message being deleted.
      *
      * @return {@code true} if the bot uses linked deletion, {@code false} otherwise.
      *
-     * @see    com.jagrosh.jdautilities.command.CommandClientBuilder#setLinkedCacheSize(int)
-     *         CommandClientBuilder#setLinkedCacheSize(int)
+     * @see com.jagrosh.jdautilities.command.CommandClientBuilder#setLinkedCacheSize(int)
+     * CommandClientBuilder#setLinkedCacheSize(int)
      */
     boolean usesLinkedDeletion();
 
     /**
      * Returns an Object of the type parameter that should contain settings relating to the specified
-     * {@link net.dv8tion.jda.core.entities.Guild Guild}.
+     * {@link net.dv8tion.jda.api.entities.Guild Guild}.
      *
      * <p>The returning object for this is specified via provision of a
      * {@link com.jagrosh.jdautilities.command.GuildSettingsManager GuildSettingsManager} to
      * {@link com.jagrosh.jdautilities.command.CommandClientBuilder#setGuildSettingsManager(com.jagrosh.jdautilities.command.GuildSettingsManager)
      * CommandClientBuilder#setGuildSettingsManager(GuildSettingsManager)}, more specifically
-     * {@link GuildSettingsManager#getSettings(net.dv8tion.jda.core.entities.Guild)
+     * {@link GuildSettingsManager#getSettings(net.dv8tion.jda.api.entities.Guild)
      * GuildSettingsManager#getSettings(Guild)}.
      *
      * @param  <S>
@@ -451,9 +450,9 @@ public interface CommandClient
      *         The Guild to get Settings for
      *
      * @return The settings object for the Guild, specified in
-     *         {@link com.jagrosh.jdautilities.command.GuildSettingsManager#getSettings(Guild)
-     *         GuildSettingsManager#getSettings(Guild)}, can be {@code null} if the implementation
-     *         allows it.
+     * {@link com.jagrosh.jdautilities.command.GuildSettingsManager#getSettings(Guild)
+     * GuildSettingsManager#getSettings(Guild)}, can be {@code null} if the implementation
+     * allows it.
      */
     <S> S getSettingsFor(Guild guild);
 

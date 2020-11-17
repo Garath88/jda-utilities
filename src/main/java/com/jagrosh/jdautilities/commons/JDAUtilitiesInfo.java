@@ -23,12 +23,11 @@ package com.jagrosh.jdautilities.commons;
  *
  * @author John Grosh (john.a.grosh@gmail.com)
  */
-public final class JDAUtilitiesInfo
-{
+public final class JDAUtilitiesInfo {
     public static final String VERSION_MAJOR = "@VERSION_MAJOR@";
     public static final String VERSION_MINOR = "@VERSION_MINOR@";
-    public static final String VERSION_REVISION  = "@VERSION_REVISION@";
-    public static final String VERSION = VERSION_MAJOR.startsWith("@")? "DEV" : VERSION_MAJOR + "." + VERSION_MINOR + "." + VERSION_REVISION;
+    public static final String VERSION_REVISION = "@VERSION_REVISION@";
+    public static final String VERSION = VERSION_MAJOR.startsWith("@") ? "DEV" : VERSION_MAJOR + "." + VERSION_MINOR + "." + VERSION_REVISION;
     public static final String GITHUB = "https://github.com/JDA-Applications/JDA-Utilities";
     public static final String AUTHOR = "JDA-Applications";
 

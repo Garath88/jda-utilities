@@ -15,10 +15,14 @@
  */
 package com.jagrosh.jdautilities.doc.standard;
 
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 import com.jagrosh.jdautilities.doc.ConvertedBy;
 import com.jagrosh.jdautilities.doc.DocConverter;
-
-import java.lang.annotation.*;
 
 /**
  * A CommandDoc {@link java.lang.annotation.Annotation Annotation}
@@ -33,15 +37,14 @@ import java.lang.annotation.*;
  * use this in place of creating a new annotation and converter if
  * possible.
  *
- * @since  2.0
  * @author Kaidan Gustave
+ * @since 2.0
  */
 @ConvertedBy(CommandInfo.Converter.class)
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE, ElementType.METHOD})
-public @interface CommandInfo
-{
+@Target({ ElementType.TYPE, ElementType.METHOD })
+public @interface CommandInfo {
     /**
      * The name and aliases of a command.
      *
@@ -80,11 +83,9 @@ public @interface CommandInfo
      * the {@link com.jagrosh.jdautilities.doc.standard.CommandInfo @CommandInfo}
      * annotation.
      */
-    class Converter implements DocConverter<CommandInfo>
-    {
+    class Converter implements DocConverter<CommandInfo> {
         @Override
-        public String read(CommandInfo annotation)
-        {
+        public String read(CommandInfo annotation) {
             String[] names = annotation.name();
             String usage = annotation.usage();
             String description = annotation.description();
@@ -92,37 +93,30 @@ public @interface CommandInfo
 
             StringBuilder b = new StringBuilder();
 
-            if(names.length > 0)
-            {
+            if (names.length > 0) {
                 b.append("**Name:** `").append(names[0]).append("`").append("\n\n");
-                if(names.length > 1)
-                {
+                if (names.length > 1) {
                     b.append("**Aliases:**");
-                    for(int i = 1; i < names.length; i++)
-                    {
+                    for (int i = 1; i < names.length; i++) {
                         b.append(" `").append(names[i]).append("`")
-                                .append(i != names.length - 1? "," : "\n\n");
+                            .append(i != names.length - 1 ? "," : "\n\n");
                     }
                 }
             }
 
-            if(!usage.isEmpty())
+            if (!usage.isEmpty())
                 b.append("**Usage:** ").append(usage).append("\n\n");
 
-            if(!description.isEmpty())
+            if (!description.isEmpty())
                 b.append("**Description:** ").append(description).append("\n\n");
 
-            if(requirements.length == 1)
-            {
+            if (requirements.length == 1) {
                 b.append("**Requirement:** ").append(requirements[0]).append("\n\n");
-            }
-            else if(requirements.length > 1)
-            {
+            } else if (requirements.length > 1) {
                 b.append("**Requirements:**\n");
-                for(int i = 1; i <= requirements.length; i++)
-                {
+                for (int i = 1; i <= requirements.length; i++) {
                     b.append(i).append(") ").append(requirements[i - 1]);
-                    if(i != requirements.length)
+                    if (i != requirements.length)
                         b.append("\n");
                 }
             }

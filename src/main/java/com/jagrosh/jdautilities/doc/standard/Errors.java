@@ -15,23 +15,25 @@
  */
 package com.jagrosh.jdautilities.doc.standard;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * The {@link java.lang.annotation.Repeatable @Repeatable} value
  * for {@link com.jagrosh.jdautilities.doc.standard.Error @Error}.
  * <br>Useful for organizing multiple @Error annotations
  *
- * @see    Error
- *
- * @since  2.0
  * @author Kaidan Gustave
+ * @see Error
+ * @since 2.0
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE, ElementType.METHOD})
-public @interface Errors
-{
+@Target({ ElementType.TYPE, ElementType.METHOD })
+public @interface Errors {
     /**
      * One or more {@link com.jagrosh.jdautilities.doc.standard.Error @Error}
      * annotations.
