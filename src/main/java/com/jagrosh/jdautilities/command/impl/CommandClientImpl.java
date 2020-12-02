@@ -221,8 +221,8 @@ public class CommandClientImpl implements CommandClient, EventListener {
                     category = command.getCategory();
                     builder.append("\n\n  __").append(category == null ? "No Category" : category.getName()).append("__:\n");
                 }
-                builder.append("\n\n`").append(textPrefix).append(prefix == null ? " " : "").append(command.getName())
-                    .append(command.getArguments() == null ? "`" : " " + command.getArguments() + "`")
+                builder.append("\n\n**").append(textPrefix).append(prefix == null ? " " : "").append(command.getName())
+                    .append(command.getArguments() == null ? "**" : " `" + command.getArguments() + "`**")
                     .append(" - ").append(command.getHelp());
             }
         }
